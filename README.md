@@ -42,31 +42,51 @@ A modern, web-first idle role-playing game inspired by the incremental prestige 
 
 ## 🚀 Getting Started
 
-### 1. Start MongoDB
-MongoDB runs on port `27017` (or via Docker Compose):
+### Quick Start (One Command)
+Run MongoDB, FastAPI backend, and SvelteKit frontend concurrently with live reloading and automatic process cleanup:
+```bash
+./scripts/dev.sh
+```
+*Alternatively: `./dev.sh`.*
+*This automatically starts the local MongoDB container (port `27019`), boots FastAPI with hot reload (`http://localhost:8001`), and launches the Vite dev server (`http://localhost:5173`). Press `Ctrl+C` to cleanly stop all servers and free ports.*
+
+---
+
+### Manual Step-by-Step Start
+
+#### 1. Start MongoDB
+MongoDB runs on host port `27019` via Docker Compose:
 ```bash
 docker compose up -d mongodb
 ```
 
-### 2. Start the Backend (with `uv`)
+#### 2. Start the Backend (with `uv`)
 ```bash
 cd backend
 uv sync
-uv run uvicorn backend.main:app --host 0.0.0.0 --port 8000 --reload
+MONGO_URI="mongodb://127.0.0.1:27019" uv run uvicorn backend.main:app --host 127.0.0.1 --port 8001 --reload
 ```
-Runs at `http://localhost:8000`.
+Runs at `http://localhost:8001`.
 
-### 3. Start the Frontend (SvelteKit 3)
+#### 3. Start the Frontend (SvelteKit 3)
 ```bash
 cd frontend
 npm install
 npm run dev
 ```
-Runs at `http://localhost:5173`.
+Runs at `http://localhost:5173` (proxies `/api` requests to backend at port `8001`).
 
-### 4. Run Backend Automated Tests
+---
+
+### 🧪 Automated Tests & Build
+To run backend unit tests and build the frontend:
+```bash
+./scripts/build.sh
+```
+Or run pytest directly:
 ```bash
 cd backend
 uv run pytest -v
 ```
 All 10 unit tests verify floor scaling, combat damage, loot generation, ascension reset formulas, and API routes.
+

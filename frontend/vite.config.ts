@@ -2,6 +2,8 @@ import adapter from '@sveltejs/adapter-auto';
 import { sveltekit } from '@sveltejs/kit/vite';
 import { defineConfig } from 'vite';
 
+const backendPort = (globalThis as unknown as { process?: { env?: Record<string, string> } }).process?.env?.PORT || '8001';
+
 export default defineConfig({
 	plugins: [
 		sveltekit({
@@ -20,7 +22,7 @@ export default defineConfig({
 	server: {
 		proxy: {
 			'/api': {
-				target: 'http://localhost:8001',
+				target: `http://localhost:${backendPort}`,
 				changeOrigin: true
 			}
 		}
