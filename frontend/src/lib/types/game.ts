@@ -44,9 +44,10 @@ export interface ActiveBuff {
 	id: string;
 	name: string;
 	multiplier: number;
-	buff_type: 'all_damage' | 'crit_guaranteed' | 'gold_multiplier' | 'elemental_boost';
+	buff_type: 'all_damage' | 'attack_speed' | 'crit_chance' | 'crit_multiplier' | 'gold_multiplier' | 'elemental_boost' | string;
 	duration_seconds: number;
 	time_remaining: number;
+	is_debuff?: boolean;
 }
 
 export interface ActiveUpgrades {
@@ -56,6 +57,19 @@ export interface ActiveUpgrades {
 	deadly_precision: number;
 	elemental_infusion: number;
 	midas_greed: number;
+}
+
+export type PerkRarity = 'common' | 'rare' | 'epic' | 'legendary';
+export type PerkCategory = 'offensive' | 'critical' | 'elemental' | 'utility' | 'boss' | 'tactical';
+
+export interface RunPerk {
+	id: string;
+	name: string;
+	description: string;
+	icon: string;
+	rarity: PerkRarity;
+	rank: number;
+	category: PerkCategory;
 }
 
 export interface ActiveRun {
@@ -68,6 +82,8 @@ export interface ActiveRun {
 	guardian_element: ElementType;
 	is_boss_floor: boolean;
 	upgrades: ActiveUpgrades;
+	perks: RunPerk[];
+	pending_perk_picks: number;
 	active_buffs: ActiveBuff[];
 }
 

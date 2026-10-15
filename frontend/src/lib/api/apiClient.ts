@@ -101,13 +101,35 @@ export class ApiClient {
 		return res.json();
 	}
 
-	public async claimMinigameBuff(minigameType: string, score: number, success: boolean, element: string = 'fire'): Promise<ActiveBuff> {
+	public async claimMinigameBuff(
+		minigameType: string,
+		score: number,
+		difficultyOrSuccess: string | boolean = 'novice',
+		targetStatOrElement: string = 'all_damage',
+		durationSeconds: number = 60
+	): Promise<ActiveBuff> {
+		let difficulty = 'novice';
+		let targetStat = 'all_damage';
+		let success = true;
+		let element = 'fire';
+
+		if (typeof difficultyOrSuccess === 'boolean') {
+			success = difficultyOrSuccess;
+			element = targetStatOrElement || 'fire';
+		} else {
+			difficulty = difficultyOrSuccess;
+			targetStat = targetStatOrElement;
+		}
+
 		const res = await fetch(`${API_BASE}/minigame/claim-buff`, {
 			method: 'POST',
 			headers: this.getHeaders(),
 			body: JSON.stringify({
 				minigame_type: minigameType,
 				score,
+				difficulty,
+				target_stat: targetStat,
+				duration_seconds: durationSeconds,
 				success,
 				element
 			})

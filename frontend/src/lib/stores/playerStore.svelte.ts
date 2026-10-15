@@ -1,6 +1,7 @@
-import type { Player, ActiveBuff, GearItem, OfflineReport, ElementType, GearSlot, ActiveUpgrades } from '#lib/types/game';
+import type { Player, ActiveBuff, GearItem, OfflineReport, ElementType, GearSlot, ActiveUpgrades, RunPerk, PerkRarity } from '#lib/types/game';
 import { api } from '#lib/api/apiClient';
 import { sfx } from '#lib/audio/sfx';
+import { rollPerkChoices, getPerkUpgradeCost, getPerkRerollCost, PERK_DEFINITIONS, getRarityForRank } from '#lib/data/perks';
 
 export interface FloatingDamage {
 	id: string;
@@ -21,12 +22,17 @@ class GameStore {
 	public player: Player | null = $state(null);
 	public isLoaded: boolean = $state(false);
 	public offlineReport: OfflineReport | null = $state(null);
-	public activeModal: 'ascension' | 'inventory' | 'leaderboard' | 'minigames' | 'offline' | null = $state(null);
+	public activeModal: 'ascension' | 'inventory' | 'leaderboard' | 'minigames' | 'offline' | 'perk_draft' | null = $state(null);
 	public activeMinigame: 'overdrive_ring' | 'rune_weave' | 'alchemical_transmutation' = $state('overdrive_ring');
 	public floatingDamages: FloatingDamage[] = $state([]);
 	public toasts: ToastItem[] = $state([]);
 	public isBossEnraged: boolean = $state(false);
 	public bossTimer: number = $state(30);
+
+	// Roguelike Perk Draft & Run State
+	public currentPerkChoices: RunPerk[] = $state([]);
+	public currentRerollCount: number = $state(0);
+	public consecutiveHits: number = $state(0);
 
 	private attackAccumulator: number = 0;
 	private lastTickTime: number = 0;
@@ -51,11 +57,17 @@ class GameStore {
 		try {
 			const res = await api.initPlayer();
 			this.player = res.player;
+			if (this.player) {
+				if (!this.player.active_run.perks) this.player.active_run.perks = [];
+				if (this.player.active_run.pending_perk_picks === undefined) this.player.active_run.pending_perk_picks = 0;
+			}
 			this.isLoaded = true;
 
 			if (res.offline_report && res.offline_report.floors_cleared > 0) {
 				this.offlineReport = res.offline_report;
 				this.activeModal = 'offline';
+			} else if (this.player?.active_run.pending_perk_picks && this.player.active_run.pending_perk_picks > 0) {
+				this.openPerkDraftModal();
 			}
 
 			this.startCombatLoop();
@@ -101,12 +113,39 @@ class GameStore {
 			baseAtk += catalyst.base_atk;
 		}
 
+		let attackSpeed = this.player.stats.attack_speed;
+		let critChance = this.player.stats.crit_chance;
+		let critMultiplier = this.player.stats.crit_multiplier;
+		let goldMult = this.player.stats.gold_multiplier;
+
 		// Run upgrades
-		baseAtk += this.player.active_run.upgrades.weapon_sharpening * 5;
-		let attackSpeed = this.player.stats.attack_speed + this.player.active_run.upgrades.swift_strike * 0.15;
-		let critChance = this.player.stats.crit_chance + this.player.active_run.upgrades.focus_training * 0.02;
-		let critMultiplier = this.player.stats.crit_multiplier + this.player.active_run.upgrades.deadly_precision * 0.15;
-		let goldMult = this.player.stats.gold_multiplier * (1 + this.player.active_run.upgrades.midas_greed * 0.15);
+		if (this.player.active_run.upgrades) {
+			baseAtk += (this.player.active_run.upgrades.weapon_sharpening || 0) * 5;
+			attackSpeed += (this.player.active_run.upgrades.swift_strike || 0) * 0.15;
+			critChance += (this.player.active_run.upgrades.focus_training || 0) * 0.02;
+			critMultiplier += (this.player.active_run.upgrades.deadly_precision || 0) * 0.15;
+			goldMult *= 1 + (this.player.active_run.upgrades.midas_greed || 0) * 0.15;
+		}
+
+		// Roguelike Run Perks
+		const perks = this.player.active_run.perks || [];
+		for (const p of perks) {
+			if (p.id === 'colossus_might') {
+				baseAtk *= 1 + p.rank * 0.20;
+			} else if (p.id === 'tempest_agility') {
+				attackSpeed += p.rank * 0.20;
+			} else if (p.id === 'deadly_focus') {
+				critChance += p.rank * 0.06;
+			} else if (p.id === 'severing_impact') {
+				critMultiplier += p.rank * 0.40;
+			} else if (p.id === 'midas_touch') {
+				goldMult *= 1 + p.rank * 0.35;
+			} else if (p.id === 'relentless_momentum') {
+				const maxBonus = 0.20 + p.rank * 0.15;
+				const currentBonus = Math.min(maxBonus, this.consecutiveHits * 0.015);
+				attackSpeed *= 1 + currentBonus;
+			}
+		}
 
 		// Gear affixes
 		const gearSlots = Object.values(this.player.equipped_gear) as (GearItem | null)[];
@@ -129,11 +168,14 @@ class GameStore {
 			}
 		}
 
-		// Active buffs
+		// Active buffs & debuffs
 		let buffDmgMult = 1;
 		for (const b of this.player.active_run.active_buffs) {
 			if (b.buff_type === 'all_damage') buffDmgMult *= b.multiplier;
 			if (b.buff_type === 'gold_multiplier') goldMult *= b.multiplier;
+			if (b.buff_type === 'attack_speed') attackSpeed *= b.multiplier;
+			if (b.buff_type === 'crit_chance') critChance *= b.multiplier;
+			if (b.buff_type === 'crit_multiplier') critMultiplier *= b.multiplier;
 		}
 		baseAtk *= buffDmgMult;
 
@@ -201,12 +243,62 @@ class GameStore {
 			elemMult += this.player.ascension_tree.nodes.elemental_apotheosis.current_rank * 0.2;
 		}
 
+		// Elemental buffs from minigames
+		for (const b of run.active_buffs) {
+			if (b.buff_type === 'elemental_boost') elemMult *= b.multiplier;
+		}
+
+		// Perks Damage Multiplier
+		const perks = run.perks || [];
+		let perkDmgMult = 1.0;
+
+		// Titan Breaker (Boss damage)
+		if (run.is_boss_floor) {
+			const titan = perks.find((p) => p.id === 'titan_breaker');
+			if (titan) perkDmgMult *= 1 + titan.rank * 0.35;
+		}
+
+		// Berserker's Blood (Missing HP bonus)
+		const berserker = perks.find((p) => p.id === 'berserker_blood');
+		if (berserker && run.guardian_hp_max > 0) {
+			const missingHpRatio = Math.max(0, 1 - run.guardian_hp_current / run.guardian_hp_max);
+			perkDmgMult *= 1 + missingHpRatio * (0.20 + berserker.rank * 0.15);
+		}
+
+		// Elemental Core perks
+		for (const p of perks) {
+			if (p.id === 'inferno_core' && heroElem === 'fire') {
+				perkDmgMult *= 1 + p.rank * 0.30;
+			} else if (p.id === 'glacial_shatter' && heroElem === 'ice') {
+				perkDmgMult *= 1 + p.rank * 0.30;
+			} else if (p.id === 'storm_conductor' && heroElem === 'lightning') {
+				perkDmgMult *= 1 + p.rank * 0.30;
+			} else if (p.id === 'void_singularity') {
+				perkDmgMult *= 1 + p.rank * 0.25;
+			} else if (p.id === 'overdrive_echo' && run.active_buffs && run.active_buffs.length > 0) {
+				perkDmgMult *= 1 + p.rank * 0.45;
+			}
+		}
+
 		// Crit check
 		const isCrit = Math.random() < stats.critChance;
 		const critFactor = isCrit ? stats.critMultiplier : 1.0;
 
-		const rawDmg = stats.totalAtk * elemMult * critFactor;
-		const finalDmg = Math.max(1, Math.round(rawDmg));
+		const rawDmg = stats.totalAtk * elemMult * critFactor * perkDmgMult;
+		let finalDmg = Math.max(1, Math.round(rawDmg));
+
+		// Abyssal Cull execute on crits for non-bosses
+		if (isCrit && !run.is_boss_floor) {
+			const cull = perks.find((p) => p.id === 'abyssal_cull');
+			if (cull && run.guardian_hp_max > 0) {
+				const executeThreshold = 0.10 + cull.rank * 0.05;
+				if (run.guardian_hp_current / run.guardian_hp_max <= executeThreshold) {
+					finalDmg = Math.max(finalDmg, Math.round(run.guardian_hp_current));
+				}
+			}
+		}
+
+		this.consecutiveHits++;
 
 		// Sound
 		if (isCrit) {
@@ -245,7 +337,10 @@ class GameStore {
 
 		const run = this.player.active_run;
 		const floor = run.current_floor;
+		const wasBoss = run.is_boss_floor;
 		const stats = this.getEffectiveStats();
+
+		this.consecutiveHits = 0;
 
 		// Calculate gold
 		const baseGold = 20.0 * Math.pow(1.12, floor - 1);
@@ -254,6 +349,28 @@ class GameStore {
 		run.gold += goldEarned;
 		run.total_gold_this_run += goldEarned;
 		sfx.playGold();
+
+		// Boss Defeat: Award Roguelike Perks selection!
+		if (wasBoss) {
+			sfx.playBossDefeat();
+			run.pending_perk_picks = (run.pending_perk_picks || 0) + 1;
+
+			// Sovereign Bounty perk bonus
+			const bountyPerk = run.perks?.find((p) => p.id === 'bounty_harvest');
+			if (bountyPerk) {
+				const bonusGold = bountyPerk.rank * 250;
+				run.gold += bonusGold;
+				run.total_gold_this_run += bonusGold;
+				this.addToast(`👑 Sovereign Bounty: +${bonusGold.toLocaleString()} Gold!`, 'loot');
+			}
+
+			// Open Perk Draft Modal if no conflicting modal is active
+			if (!this.activeModal || this.activeModal === 'perk_draft') {
+				this.openPerkDraftModal();
+			}
+
+			this.addToast(`🏆 Boss Guardian Floor ${floor} Defeated! Spire Boon unlocked!`, 'ascend');
+		}
 
 		// Advance floor
 		const nextFloor = floor + 1;
@@ -272,9 +389,15 @@ class GameStore {
 		run.guardian_hp_max = maxHp;
 		run.guardian_hp_current = maxHp;
 
-		// Loot roll (guaranteed on boss floors, 15% on regular floors)
+		// Reset boss timer with Astral Bulwark bonus
+		const bulwark = run.perks?.find((p) => p.id === 'astral_bulwark');
+		this.bossTimer = 30 + (bulwark ? bulwark.rank * 10 : 0);
+
+		// Loot roll with Spire Scavenger bonus (guaranteed on boss floors)
+		const scavenger = run.perks?.find((p) => p.id === 'spire_scavenger');
+		const scavBonus = scavenger ? scavenger.rank * 0.15 : 0;
 		const lootRoll = Math.random();
-		if (run.is_boss_floor || lootRoll < 0.15) {
+		if (run.is_boss_floor || lootRoll < (0.15 + scavBonus)) {
 			this.generateAndAddLoot(nextFloor);
 		}
 
@@ -411,6 +534,94 @@ class GameStore {
 		}
 	}
 
+	// Roguelike Run Perks & Boss Drafting
+	public openPerkDraftModal() {
+		if (!this.player) return;
+		if (this.currentPerkChoices.length === 0) {
+			this.currentPerkChoices = rollPerkChoices(this.player.active_run.current_floor, this.player.active_run.perks || []);
+			this.currentRerollCount = 0;
+		}
+		this.activeModal = 'perk_draft';
+	}
+
+	public closePerkDraftModal() {
+		this.activeModal = null;
+	}
+
+	public getRerollCost(): number {
+		return getPerkRerollCost(this.currentRerollCount, this.player?.active_run.current_floor || 1);
+	}
+
+	public rerollPerkChoices() {
+		if (!this.player) return;
+		const cost = this.getRerollCost();
+		if (this.player.active_run.gold >= cost) {
+			this.player.active_run.gold -= cost;
+			this.currentRerollCount++;
+			this.currentPerkChoices = rollPerkChoices(this.player.active_run.current_floor, this.player.active_run.perks || []);
+			sfx.playReroll();
+			this.addToast('Rerolled Spire Boons!', 'info');
+		} else {
+			this.addToast('Not enough Gold to reroll!', 'warning');
+		}
+	}
+
+	public selectPerk(chosenPerk: RunPerk) {
+		if (!this.player) return;
+		const run = this.player.active_run;
+		if (!run.perks) run.perks = [];
+
+		const existing = run.perks.find((p) => p.id === chosenPerk.id);
+		if (existing) {
+			existing.rank += 1;
+			const def = PERK_DEFINITIONS[existing.id];
+			existing.rarity = getRarityForRank(def?.baseRarity || 'common', existing.rank);
+			existing.description = def ? def.getDescription(existing.rank) : existing.description;
+		} else {
+			run.perks.push({ ...chosenPerk });
+		}
+
+		run.pending_perk_picks = Math.max(0, (run.pending_perk_picks || 1) - 1);
+		sfx.playPerkSelect();
+		this.addToast(`✨ Claimed Boon: ${chosenPerk.name}!`, 'success');
+
+		if (run.pending_perk_picks > 0) {
+			// Roll next set of 3 choices
+			this.currentPerkChoices = rollPerkChoices(run.current_floor, run.perks);
+			this.currentRerollCount = 0;
+		} else {
+			this.currentPerkChoices = [];
+			this.currentRerollCount = 0;
+			this.activeModal = null;
+		}
+	}
+
+	public getPerkUpgradeCost(rarity: PerkRarity, rank: number): number {
+		return getPerkUpgradeCost(rarity, rank);
+	}
+
+	public upgradePerk(perkId: string) {
+		if (!this.player) return;
+		const run = this.player.active_run;
+		if (!run.perks) return;
+
+		const perk = run.perks.find((p) => p.id === perkId);
+		if (!perk || perk.rank >= 5) return;
+
+		const cost = getPerkUpgradeCost(perk.rarity, perk.rank);
+		if (run.gold >= cost) {
+			run.gold -= cost;
+			perk.rank += 1;
+			const def = PERK_DEFINITIONS[perk.id];
+			perk.rarity = getRarityForRank(def?.baseRarity || 'common', perk.rank);
+			perk.description = def ? def.getDescription(perk.rank) : perk.description;
+			sfx.playLevelUp();
+			this.addToast(`⚡ Forged ${perk.name} to Rank ${perk.rank} (${perk.rarity.toUpperCase()})!`, 'success');
+		} else {
+			this.addToast(`Need ${cost.toLocaleString()} Gold to forge!`, 'warning');
+		}
+	}
+
 	// Gear Equipping & Salvage
 	public equipItem(item: GearItem) {
 		if (!this.player) return;
@@ -451,6 +662,13 @@ class GameStore {
 		try {
 			const res = await api.triggerAscension();
 			this.player = res.player;
+			if (this.player) {
+				this.player.active_run.perks = [];
+				this.player.active_run.pending_perk_picks = 0;
+			}
+			this.currentPerkChoices = [];
+			this.currentRerollCount = 0;
+			this.consecutiveHits = 0;
 			sfx.playAscension();
 			this.addToast(`ASCENDED! Gained ${res.sparks_awarded} Ascension Sparks!`, 'ascend');
 		} catch (err: any) {
@@ -477,9 +695,25 @@ class GameStore {
 	// Minigame Buff Application
 	public applyMinigameBuff(buff: ActiveBuff) {
 		if (!this.player) return;
+		const catalyst = this.player.active_run.perks?.find((p) => p.id === 'alchemical_catalyst');
+		const isDebuff = buff.is_debuff || buff.multiplier < 1.0;
+		if (catalyst) {
+			buff.duration_seconds += catalyst.rank * 15;
+			buff.time_remaining += catalyst.rank * 15;
+			if (!isDebuff) {
+				buff.multiplier *= 1 + catalyst.rank * 0.30;
+			}
+		}
 		this.player.active_run.active_buffs.push(buff);
-		sfx.playMinigameSuccess();
-		this.addToast(`Minigame Victory: ${buff.name} activated!`, 'success');
+		if (isDebuff) {
+			sfx.playMinigameMiss();
+			const pct = Math.round((buff.multiplier - 1) * 100);
+			this.addToast(`Gambit Affliction: ${buff.name} (${pct}%)!`, 'warning');
+		} else {
+			sfx.playMinigameSuccess();
+			const pct = Math.round((buff.multiplier - 1) * 100);
+			this.addToast(`Gambit Victorious: ${buff.name} (+${pct}%)!`, 'success');
+		}
 	}
 }
 

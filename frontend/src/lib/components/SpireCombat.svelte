@@ -34,8 +34,14 @@
 		{#if run?.is_boss_floor}
 			<div class="boss-tag">
 				<span class="boss-icon">⚠️</span>
-				<span>BOSS ENCOUNTER</span>
+				<span>BOSS ENCOUNTER • REWARD: SPIRE BOON</span>
 			</div>
+		{/if}
+
+		{#if run?.pending_perk_picks && run.pending_perk_picks > 0}
+			<button class="claim-boon-btn font-mono" onclick={() => game.openPerkDraftModal()}>
+				<span>👑 CLAIM BOON ({run.pending_perk_picks})</span>
+			</button>
 		{/if}
 
 		<div class="badge-elem badge-{run?.guardian_element || 'fire'}">
@@ -98,8 +104,9 @@
 	{#if run && run.active_buffs.length > 0}
 		<div class="active-buffs-bar">
 			{#each run.active_buffs as buff (buff.id)}
-				<div class="buff-chip">
-					<span class="buff-icon">✨</span>
+				{@const isDebuff = buff.is_debuff || buff.multiplier < 1.0}
+				<div class="buff-chip {isDebuff ? 'debuff' : 'buff'}">
+					<span class="buff-icon">{isDebuff ? '⚠️' : '✨'}</span>
 					<span class="buff-name">{buff.name}</span>
 					<span class="buff-mult font-mono">x{buff.multiplier}</span>
 					<span class="buff-time font-mono">({Math.ceil(buff.time_remaining)}s)</span>
@@ -163,6 +170,28 @@
 		align-items: center;
 		gap: 0.4rem;
 		animation: pulseGlow 1.5s infinite;
+	}
+
+	.claim-boon-btn {
+		background: linear-gradient(135deg, rgba(245, 158, 11, 0.25) 0%, rgba(217, 119, 6, 0.4) 100%);
+		border: 1px solid #fbbf24;
+		box-shadow: 0 0 16px rgba(245, 158, 11, 0.4);
+		color: #fbbf24;
+		padding: 0.3rem 0.85rem;
+		border-radius: 9999px;
+		font-size: 0.75rem;
+		font-weight: 800;
+		cursor: pointer;
+		display: flex;
+		align-items: center;
+		gap: 0.35rem;
+		animation: pulseBanner 2s infinite;
+		transition: all 0.2s;
+	}
+
+	.claim-boon-btn:hover {
+		transform: scale(1.05);
+		filter: brightness(1.2);
 	}
 
 	.guardian-stage {
@@ -313,6 +342,26 @@
 		display: flex;
 		align-items: center;
 		gap: 0.35rem;
+	}
+
+	.buff-chip.buff {
+		background: rgba(16, 185, 129, 0.15);
+		border-color: rgba(16, 185, 129, 0.4);
+		color: #a7f3d0;
+	}
+
+	.buff-chip.buff .buff-mult {
+		color: #34d399;
+	}
+
+	.buff-chip.debuff {
+		background: rgba(239, 68, 68, 0.15);
+		border-color: rgba(239, 68, 68, 0.4);
+		color: #fca5a5;
+	}
+
+	.buff-chip.debuff .buff-mult {
+		color: #ef4444;
 	}
 
 	.buff-mult {
