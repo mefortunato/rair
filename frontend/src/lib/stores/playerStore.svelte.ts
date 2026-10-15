@@ -643,6 +643,17 @@ class GameStore {
 		this.addToast(`Equipped ${item.name}`, 'info');
 	}
 
+	public unequipItem(slot: GearSlot) {
+		if (!this.player) return;
+		const current = this.player.equipped_gear[slot];
+		if (!current) return;
+		current.is_equipped = false;
+		this.player.equipped_gear[slot] = null;
+		this.player.inventory.push(current);
+		sfx.playSlash();
+		this.addToast(`Unequipped ${current.name}`, 'info');
+	}
+
 	public async salvageItem(itemId: string) {
 		if (!this.player) return;
 		try {

@@ -1,9 +1,11 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import { game } from '#lib/stores/playerStore.svelte';
-	import SpireCombat from '#lib/components/SpireCombat.svelte';
-	import HeroPanel from '#lib/components/HeroPanel.svelte';
-	import ActiveUpgrades from '#lib/components/ActiveUpgrades.svelte';
+	import { nav } from '#lib/stores/navigationStore.svelte';
+
+	import SpireView from '#lib/components/Spire/SpireView.svelte';
+	import EquipmentView from '#lib/components/Equipment/EquipmentView.svelte';
+	import BoonsView from '#lib/components/Boons/BoonsView.svelte';
 	import MinigameContainer from '#lib/components/Minigames/MinigameContainer.svelte';
 
 	onMount(() => {
@@ -18,24 +20,16 @@
 		<p class="loading-subtitle">Syncing cosmic state with MongoDB</p>
 	</div>
 {:else}
-	<div class="dashboard-grid">
-		<!-- Top Row: Combat & Character -->
-		<div class="combat-column">
-			<SpireCombat />
-		</div>
-
-		<div class="hero-column">
-			<HeroPanel />
-		</div>
-
-		<!-- Bottom Row: Run Upgrades & Active Minigames -->
-		<div class="upgrades-column">
-			<ActiveUpgrades />
-		</div>
-
-		<div class="minigames-column">
+	<div class="viewport-fullscreen">
+		{#if nav.currentView === 'spire'}
+			<SpireView />
+		{:else if nav.currentView === 'equipment'}
+			<EquipmentView />
+		{:else if nav.currentView === 'boons'}
+			<BoonsView />
+		{:else if nav.currentView === 'minigames'}
 			<MinigameContainer />
-		</div>
+		{/if}
 	</div>
 {/if}
 
@@ -60,7 +54,9 @@
 	}
 
 	@keyframes spin {
-		to { transform: rotate(360deg); }
+		to {
+			transform: rotate(360deg);
+		}
 	}
 
 	.loading-title {
@@ -76,19 +72,23 @@
 		color: var(--text-muted);
 	}
 
-	.dashboard-grid {
-		display: grid;
-		grid-template-columns: 1.15fr 0.85fr;
-		gap: 1.25rem;
+	.viewport-fullscreen {
+		width: 100%;
+		flex: 1;
+		display: flex;
+		flex-direction: column;
+		animation: fadeInView 0.2s ease-out;
 	}
 
-	@media (max-width: 980px) {
-		.dashboard-grid {
-			grid-template-columns: 1fr;
+	@keyframes fadeInView {
+		from {
+			opacity: 0;
+			transform: translateY(4px);
+		}
+		to {
+			opacity: 1;
+			transform: translateY(0);
 		}
 	}
-
-	.combat-column, .hero-column, .upgrades-column, .minigames-column {
-		min-width: 0;
-	}
 </style>
+
