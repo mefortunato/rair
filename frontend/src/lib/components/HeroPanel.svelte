@@ -25,9 +25,13 @@
 		</div>
 
 		<div class="currency-group">
-			<div class="currency-badge badge-gold" title="Active Run Gold (Resets upon Ascension)">
+			<div class="currency-badge badge-gold" title="Active Run Gold: Used for perk rerolls & rarity forging (resets on Ascension)">
 				<span>🪙</span>
 				<span class="font-mono">{Math.floor(player?.active_run.gold || 0).toLocaleString()}</span>
+			</div>
+			<div class="currency-badge badge-perks" title="Active Spire Boons (Earned from defeating Bosses, resets on Ascension)">
+				<span>👑</span>
+				<span class="font-mono">{player?.active_run.perks?.length || 0} Boons</span>
 			</div>
 			<div class="currency-badge badge-sparks" title="Ascension Sparks (Permanent Prestige Currency)">
 				<span>✨</span>
@@ -179,6 +183,12 @@
 		background: rgba(245, 158, 11, 0.15);
 		border: 1px solid rgba(245, 158, 11, 0.4);
 		color: #fbbf24;
+	}
+
+	.badge-perks {
+		background: rgba(176, 92, 255, 0.15);
+		border: 1px solid rgba(176, 92, 255, 0.4);
+		color: #c084fc;
 	}
 
 	.badge-sparks {

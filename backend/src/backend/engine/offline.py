@@ -58,6 +58,7 @@ def calculate_offline_gains(player: Player, now: datetime | None = None) -> dict
     simulated_floor = current_floor
     gold_accumulated = 0.0
     items_found = []
+    bosses_cleared = 0
     
     time_remaining = capped_seconds
     
@@ -81,7 +82,11 @@ def calculate_offline_gains(player: Player, now: datetime | None = None) -> dict
             gold_accumulated += get_floor_gold_reward(simulated_floor, player.stats.gold_multiplier)
             
             # Chance of finding loot on floor clear
-            if simulated_floor % 5 == 0 or (simulated_floor % 2 == 0 and len(items_found) < 5):
+            if simulated_floor % 5 == 0:
+                bosses_cleared += 1
+                item = generate_gear_item(simulated_floor)
+                items_found.append(item.model_dump())
+            elif simulated_floor % 2 == 0 and len(items_found) < 5:
                 item = generate_gear_item(simulated_floor)
                 items_found.append(item.model_dump())
                 
@@ -97,6 +102,7 @@ def calculate_offline_gains(player: Player, now: datetime | None = None) -> dict
     return {
         "elapsed_seconds": elapsed_seconds,
         "floors_cleared": max(0, floors_cleared),
+        "bosses_cleared": bosses_cleared,
         "gold_earned": round(gold_accumulated, 1),
         "items_found": items_found[:6]  # Max 6 items
     }

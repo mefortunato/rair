@@ -5,7 +5,9 @@ from backend.engine.scaling import (
     get_guardian_defense,
     get_floor_gold_reward,
     get_active_upgrade_cost,
-    calculate_ascension_sparks
+    calculate_ascension_sparks,
+    get_perk_reroll_cost,
+    get_perk_upgrade_cost
 )
 from backend.engine.combat import calculate_hero_hit, get_elemental_multiplier
 from backend.engine.loot import generate_gear_item
@@ -19,6 +21,8 @@ __all__ = [
     "get_floor_gold_reward",
     "get_active_upgrade_cost",
     "calculate_ascension_sparks",
+    "get_perk_reroll_cost",
+    "get_perk_upgrade_cost",
     "calculate_hero_hit",
     "get_elemental_multiplier",
     "generate_gear_item",

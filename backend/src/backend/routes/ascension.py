@@ -56,6 +56,8 @@ async def trigger_ascension(x_guest_token: str = Header(...)):
         guardian_element=first_elem,
         is_boss_floor=starting_floor % 5 == 0,
         upgrades=ActiveUpgrades(),
+        perks=[],
+        pending_perk_picks=0,
         active_buffs=[]
     )
     

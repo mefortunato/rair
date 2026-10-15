@@ -41,7 +41,7 @@
 				<span class="callout-tag">PRESTIGE TRANSMUTATION</span>
 				<h3 class="callout-title">Ascend to the Astral Cosmos</h3>
 				<p class="callout-desc">
-					Ascension wipes your active run floor, run gold, and active upgrades, but permanently awards 
+					Ascension wipes your active run floor, run gold, and active boons/perks ({player?.active_run.perks?.length || 0} active), but permanently awards 
 					<strong class="highlight-sparks font-mono">+{canAscend ? estimatedSparks : 0} Ascension Sparks</strong> 
 					and raises your Ascension Level!
 				</p>

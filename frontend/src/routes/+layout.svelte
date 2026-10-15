@@ -8,6 +8,7 @@
 	import InventoryModal from '#lib/components/InventoryModal.svelte';
 	import LeaderboardModal from '#lib/components/LeaderboardModal.svelte';
 	import OfflineModal from '#lib/components/OfflineModal.svelte';
+	import PerkDraftModal from '#lib/components/PerkDraftModal.svelte';
 
 	let { children }: LayoutProps = $props();
 
@@ -59,6 +60,8 @@
 		<LeaderboardModal />
 	{:else if game.activeModal === 'offline'}
 		<OfflineModal />
+	{:else if game.activeModal === 'perk_draft'}
+		<PerkDraftModal />
 	{/if}
 </div>
 

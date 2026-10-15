@@ -1,7 +1,7 @@
 from backend.models.gear import GearItem, GearSlot, Rarity, ElementType, Affix
 from backend.models.ascension import AscensionTree, ConstellationNode
 from backend.models.minigames import MinigameType, ActiveBuff, ClaimMinigameRequest
-from backend.models.player import Player, ActiveRun, PlayerStats, ActiveUpgrades, SyncPayload
+from backend.models.player import Player, ActiveRun, PlayerStats, ActiveUpgrades, SyncPayload, RunPerk
 
 __all__ = [
     "GearItem",
@@ -18,5 +18,6 @@ __all__ = [
     "ActiveRun",
     "PlayerStats",
     "ActiveUpgrades",
+    "RunPerk",
     "SyncPayload"
 ]

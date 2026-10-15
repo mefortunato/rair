@@ -5,6 +5,15 @@ from backend.models.gear import GearItem, GearSlot, ElementType
 from backend.models.ascension import AscensionTree
 from backend.models.minigames import ActiveBuff
 
+class RunPerk(BaseModel):
+    id: str
+    name: str
+    description: str
+    icon: str
+    rarity: str = "common"          # common, rare, epic, legendary
+    rank: int = 1
+    category: str = "offensive"     # offensive, critical, elemental, utility, boss, tactical
+
 class ActiveUpgrades(BaseModel):
     weapon_sharpening: int = 0      # Base ATK
     swift_strike: int = 0           # Attack Speed
@@ -23,6 +32,8 @@ class ActiveRun(BaseModel):
     guardian_element: ElementType = ElementType.FIRE
     is_boss_floor: bool = False
     upgrades: ActiveUpgrades = Field(default_factory=ActiveUpgrades)
+    perks: list[RunPerk] = Field(default_factory=list)
+    pending_perk_picks: int = 0
     active_buffs: list[ActiveBuff] = Field(default_factory=list)
 
 class PlayerStats(BaseModel):

@@ -57,6 +57,8 @@ async def init_player(req: InitRequest):
         player = Player.model_validate(player_doc)
         # Calculate offline gains
         offline_report = calculate_offline_gains(player)
+        if offline_report and offline_report.get("bosses_cleared", 0) > 0:
+            player.active_run.pending_perk_picks += offline_report["bosses_cleared"]
         # Update last_active
         player.last_active = datetime.now(timezone.utc)
         await db_manager.save_player(player.model_dump())

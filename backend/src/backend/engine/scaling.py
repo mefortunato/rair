@@ -72,3 +72,19 @@ def calculate_ascension_sparks(highest_floor: int, total_gold_earned: float) -> 
     floor_factor = (highest_floor / 10.0) ** 2.4
     gold_factor = (1.0 + total_gold_earned / 10000.0) ** 0.15
     return max(1, math.floor(floor_factor * gold_factor))
+
+def get_perk_reroll_cost(reroll_count: int, floor: int = 1) -> float:
+    """Calculates active run gold cost to reroll perk choices."""
+    return round(40.0 + (reroll_count * 25.0) + (floor * 1.5), 1)
+
+def get_perk_upgrade_cost(rarity: str, rank: int) -> float:
+    """Calculates active run gold cost to upgrade a perk rarity / rank."""
+    base_costs = {
+        "common": 60.0,
+        "rare": 150.0,
+        "epic": 350.0,
+        "legendary": 800.0
+    }
+    base = base_costs.get(rarity.lower(), 60.0)
+    return round(base * (1.35 ** max(0, rank - 1)), 1)
+

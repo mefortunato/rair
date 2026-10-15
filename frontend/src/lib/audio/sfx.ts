@@ -242,6 +242,85 @@ class SoundEngine {
 			osc.stop(startTime + 1.2);
 		});
 	}
+
+	public playBossDefeat() {
+		if (!this.enabled) return;
+		this.initContext();
+		if (!this.ctx || !this.masterGain) return;
+
+		// Heroic ascending fanfare
+		const notes = [392.0, 523.25, 659.25, 783.99, 1046.5]; // G4, C5, E5, G5, C6
+		const now = this.ctx.currentTime;
+
+		notes.forEach((freq, idx) => {
+			if (!this.ctx || !this.masterGain) return;
+			const osc = this.ctx.createOscillator();
+			const gain = this.ctx.createGain();
+			const startTime = now + idx * 0.07;
+
+			osc.type = 'triangle';
+			osc.frequency.setValueAtTime(freq, startTime);
+
+			gain.gain.setValueAtTime(0.25, startTime);
+			gain.gain.exponentialRampToValueAtTime(0.001, startTime + 0.35);
+
+			osc.connect(gain);
+			gain.connect(this.masterGain);
+
+			osc.start(startTime);
+			osc.stop(startTime + 0.35);
+		});
+	}
+
+	public playPerkSelect() {
+		if (!this.enabled) return;
+		this.initContext();
+		if (!this.ctx || !this.masterGain) return;
+
+		// Resonant celestial sparkle
+		const now = this.ctx.currentTime;
+		const osc = this.ctx.createOscillator();
+		const gain = this.ctx.createGain();
+
+		osc.type = 'sine';
+		osc.frequency.setValueAtTime(587.33, now); // D5
+		osc.frequency.exponentialRampToValueAtTime(1174.66, now + 0.15); // D6
+		osc.frequency.exponentialRampToValueAtTime(1760.0, now + 0.3); // A6
+
+		gain.gain.setValueAtTime(0.25, now);
+		gain.gain.exponentialRampToValueAtTime(0.001, now + 0.45);
+
+		osc.connect(gain);
+		gain.connect(this.masterGain);
+
+		osc.start(now);
+		osc.stop(now + 0.45);
+	}
+
+	public playReroll() {
+		if (!this.enabled) return;
+		this.initContext();
+		if (!this.ctx || !this.masterGain) return;
+
+		// Card reshuffle whoosh
+		const now = this.ctx.currentTime;
+		const osc = this.ctx.createOscillator();
+		const gain = this.ctx.createGain();
+
+		osc.type = 'sawtooth';
+		osc.frequency.setValueAtTime(400, now);
+		osc.frequency.exponentialRampToValueAtTime(800, now + 0.08);
+		osc.frequency.exponentialRampToValueAtTime(300, now + 0.18);
+
+		gain.gain.setValueAtTime(0.18, now);
+		gain.gain.exponentialRampToValueAtTime(0.001, now + 0.18);
+
+		osc.connect(gain);
+		gain.connect(this.masterGain);
+
+		osc.start(now);
+		osc.stop(now + 0.18);
+	}
 }
 
 export const sfx = new SoundEngine();

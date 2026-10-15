@@ -88,3 +88,40 @@ def test_gear_loot_generation():
     assert item.rarity in list(Rarity)
     assert item.level == 10
     assert len(item.affixes) > 0
+
+def test_perk_mechanics_and_costs():
+    from backend.engine.scaling import get_perk_reroll_cost, get_perk_upgrade_cost
+    from backend.models.player import RunPerk, ActiveRun
+
+    # Test reroll cost scaling
+    cost_0 = get_perk_reroll_cost(0, floor=5)
+    cost_1 = get_perk_reroll_cost(1, floor=5)
+    assert cost_0 > 0
+    assert cost_1 > cost_0
+
+    # Test perk upgrade cost by rarity and rank
+    common_cost = get_perk_upgrade_cost("common", rank=1)
+    rare_cost = get_perk_upgrade_cost("rare", rank=1)
+    epic_cost = get_perk_upgrade_cost("epic", rank=1)
+    legendary_cost = get_perk_upgrade_cost("legendary", rank=1)
+    assert common_cost < rare_cost < epic_cost < legendary_cost
+
+    # Higher rank costs more
+    common_rank2 = get_perk_upgrade_cost("common", rank=2)
+    assert common_rank2 > common_cost
+
+    # Test ActiveRun with perks
+    perk = RunPerk(
+        id="colossus_might",
+        name="Colossus Might",
+        description="+20% Attack Power",
+        icon="⚔️",
+        rarity="common",
+        rank=1,
+        category="offensive"
+    )
+    run = ActiveRun(perks=[perk], pending_perk_picks=1)
+    assert len(run.perks) == 1
+    assert run.perks[0].id == "colossus_might"
+    assert run.pending_perk_picks == 1
+
