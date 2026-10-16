@@ -330,3 +330,18 @@ async def test_auth_google_and_guest_linking():
         assert resolve_cloud.json()["status"] == "cloud_loaded"
         assert resolve_cloud.json()["player"]["google_id"] == "google_sub_12345"
 
+@pytest.mark.anyio
+async def test_spa_and_static_serving():
+    transport = ASGITransport(app=app)
+    async with AsyncClient(transport=transport, base_url="http://test") as client:
+        # Root endpoint
+        root_resp = await client.get("/")
+        assert root_resp.status_code == 200
+        # If static build exists, index.html is served (contains HTML)
+        assert "<!doctype html>" in root_resp.text.lower() or "rair" in root_resp.text.lower()
+
+        # Unknown API endpoint returns 404 JSON, not HTML SPA fallback
+        api_404_resp = await client.get("/api/unknown-endpoint")
+        assert api_404_resp.status_code == 404
+        assert api_404_resp.headers.get("content-type", "").startswith("application/json")
+

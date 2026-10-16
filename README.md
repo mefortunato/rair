@@ -88,5 +88,26 @@ Or run pytest directly:
 cd backend
 uv run pytest -v
 ```
-All 10 unit tests verify floor scaling, combat damage, loot generation, ascension reset formulas, and API routes.
+All 14 unit tests verify floor scaling, combat damage, loot generation, ascension reset formulas, SPA serving, and API routes.
+
+---
+
+## ☁️ Deployment to Google Cloud Run
+
+RAIR includes complete dev tooling to deploy as an auto-scaling, serverless container on Google Cloud Run.
+
+### 1. Pre-Flight Local Container Validation
+Test the multi-stage production Docker container locally before deploying:
+```bash
+./scripts/test-docker.sh
+```
+
+### 2. One-Command Deploy to GCP Cloud Run
+Deploy the game directly to your Google Cloud project (configured via `.env`):
+```bash
+./scripts/deploy-gcp.sh
+```
+*Supports `--dry-run`, `--use-secrets` (GCP Secret Manager), and custom `--region` / `--project` flags.*
+
+For full configuration and architecture details, see the [GCP Cloud Run Deployment Guide](docs/GCP_RUN_DEPLOYMENT.md).
 

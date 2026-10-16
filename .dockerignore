@@ -1,0 +1,33 @@
+# Git & IDE
+.git
+.github
+.gitignore
+.vscode
+.idea
+*.swp
+*.swo
+
+# Environment & secrets (never leak credentials into image)
+.env
+.env.*
+!.env.example
+
+# Node / Frontend build artifacts
+node_modules
+frontend/node_modules
+frontend/.svelte-kit
+frontend/build
+
+# Python / Backend build artifacts
+backend/.venv
+backend/.pytest_cache
+backend/__pycache__
+**/__pycache__
+**/*.pyc
+**/*.pyo
+**/*.pyd
+.pytest_cache
+
+# OS artifacts
+.DS_Store
+Thumbs.db
