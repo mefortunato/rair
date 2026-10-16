@@ -21,7 +21,7 @@ if [ -f "${ROOT_DIR}/.env" ]; then
 fi
 
 # 2. Local overrides and defaults for development
-LOCAL_MONGO_PORT="${MONGO_PORT:-27019}"
+LOCAL_MONGO_PORT="${MONGO_PORT:-27017}"
 export MONGO_URI="${MONGO_URI:-mongodb://127.0.0.1:${LOCAL_MONGO_PORT}}"
 export MONGODB_URI="${MONGO_URI}"
 export DATABASE_NAME="${DATABASE_NAME:-rair_db}"
@@ -31,9 +31,42 @@ FRONTEND_PORT="${FRONTEND_PORT:-5173}"
 export FRONTEND_URL="http://localhost:${FRONTEND_PORT}"
 
 # 3. Ensure local MongoDB Docker container is running (if Docker is available)
-if command -v docker >/dev/null 2>&1 && docker info >/dev/null 2>&1; then
+is_mongodb_running() {
+  # 1. Check if local port is already open and accepting connections
+  if (exec 3<>/dev/tcp/127.0.0.1/"${LOCAL_MONGO_PORT}") 2>/dev/null; then
+    exec 3<&- 2>/dev/null || true
+    exec 3>&- 2>/dev/null || true
+    return 0
+  fi
+
+  # Fallback to nc if available
+  if command -v nc >/dev/null 2>&1 && nc -z -w 1 127.0.0.1 "${LOCAL_MONGO_PORT}" >/dev/null 2>&1; then
+    return 0
+  fi
+
+  # Fallback to ss socket inspection if available
+  if command -v ss >/dev/null 2>&1 && ss -tln "( sport = :${LOCAL_MONGO_PORT} )" 2>/dev/null | grep -q LISTEN; then
+    return 0
+  fi
+
+  # 2. Check if MongoDB container is already running in Docker
+  if command -v docker >/dev/null 2>&1; then
+    if [ "$(docker inspect -f '{{.State.Running}}' rair-mongodb 2>/dev/null)" = "true" ]; then
+      return 0
+    fi
+  fi
+
+  return 1
+}
+
+if is_mongodb_running; then
+  echo "✓ MongoDB is already running on port ${LOCAL_MONGO_PORT}."
+  echo "⚡ Dev Database: ${MONGO_URI} (${DATABASE_NAME})"
+elif command -v docker >/dev/null 2>&1 && docker info >/dev/null 2>&1; then
   echo "📦 Ensuring local MongoDB container is running on port ${LOCAL_MONGO_PORT}..."
-  docker compose up -d mongodb
+  if ! docker compose up -d mongodb; then
+    echo "⚠️ Failed to start MongoDB container. Backend will attempt connection or use in-memory fallback."
+  fi
   echo "⚡ Dev Database: ${MONGO_URI} (${DATABASE_NAME})"
 else
   echo "⚠️ Docker is not running or unavailable. Backend will use in-memory storage fallback."
