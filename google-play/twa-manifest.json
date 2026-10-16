@@ -1,0 +1,68 @@
+{
+  "packageId": "com.rair.game",
+  "host": "rair.app",
+  "name": "RAIR - Rogue Ascension: Idle Role-playing",
+  "launcherName": "RAIR",
+  "display": "standalone",
+  "themeColor": "#0b0f19",
+  "themeColorDark": "#0b0f19",
+  "navigationColor": "#07090e",
+  "navigationColorDark": "#07090e",
+  "navigationDividerColor": "#00000000",
+  "navigationDividerColorDark": "#00000000",
+  "backgroundColor": "#07090e",
+  "enableNotifications": false,
+  "startUrl": "/?source=pwa",
+  "iconUrl": "https://rair.app/icons/icon-512.png",
+  "maskableIconUrl": "https://rair.app/icons/icon-512-maskable.png",
+  "splashScreenFadeOutDuration": 300,
+  "signingKey": {
+    "path": "./android.keystore",
+    "alias": "android"
+  },
+  "appVersionCode": 1,
+  "appVersionName": "1.0.0",
+  "shortcuts": [
+    {
+      "name": "Climb Spire",
+      "shortName": "Spire",
+      "url": "https://rair.app/?viewport=spire",
+      "icon": "https://rair.app/icons/icon-96.png"
+    },
+    {
+      "name": "Hero Forge",
+      "shortName": "Forge",
+      "url": "https://rair.app/?viewport=hero",
+      "icon": "https://rair.app/icons/icon-96.png"
+    },
+    {
+      "name": "Ascension Altar",
+      "shortName": "Altar",
+      "url": "https://rair.app/?modal=ascension",
+      "icon": "https://rair.app/icons/icon-96.png"
+    },
+    {
+      "name": "Minigames",
+      "shortName": "Minigames",
+      "url": "https://rair.app/?viewport=minigames",
+      "icon": "https://rair.app/icons/icon-96.png"
+    }
+  ],
+  "generatorApp": "bubblewrap-cli",
+  "webManifestUrl": "https://rair.app/manifest.webmanifest",
+  "fallbackType": "customtabs",
+  "features": {
+    "locationDelegation": {
+      "enabled": false
+    },
+    "playBilling": {
+      "enabled": false
+    }
+  },
+  "alphaDependencies": {
+    "enabled": false
+  },
+  "enableSiteSettingsShortcut": true,
+  "isChromeOSOnly": false,
+  "orientation": "portrait"
+}

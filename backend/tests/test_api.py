@@ -345,3 +345,36 @@ async def test_spa_and_static_serving():
         assert api_404_resp.status_code == 404
         assert api_404_resp.headers.get("content-type", "").startswith("application/json")
 
+@pytest.mark.anyio
+async def test_pwa_static_assets():
+    transport = ASGITransport(app=app)
+    async with AsyncClient(transport=transport, base_url="http://test") as client:
+        # PWA Manifest
+        manifest_resp = await client.get("/manifest.webmanifest")
+        assert manifest_resp.status_code == 200
+        assert "application/manifest+json" in manifest_resp.headers.get("content-type", "")
+        manifest_data = manifest_resp.json()
+        assert manifest_data["short_name"] == "RAIR"
+        assert manifest_data["display"] == "standalone"
+
+        # Service Worker
+        sw_resp = await client.get("/service-worker.js")
+        assert sw_resp.status_code == 200
+        assert "javascript" in sw_resp.headers.get("content-type", "")
+        assert sw_resp.headers.get("service-worker-allowed") == "/"
+
+        # Digital Asset Links for Google Play Store TWA
+        assetlinks_resp = await client.get("/.well-known/assetlinks.json")
+        assert assetlinks_resp.status_code == 200
+        assert "application/json" in assetlinks_resp.headers.get("content-type", "")
+
+        # PWA Icons
+        icon_resp = await client.get("/icons/icon-192.png")
+        assert icon_resp.status_code == 200
+        assert "image/png" in icon_resp.headers.get("content-type", "")
+
+        maskable_resp = await client.get("/icons/icon-512-maskable.png")
+        assert maskable_resp.status_code == 200
+        assert "image/png" in maskable_resp.headers.get("content-type", "")
+
+

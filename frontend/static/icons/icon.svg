@@ -1,0 +1,139 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <!-- Background Gradient -->
+    <radialGradient id="bgGlow" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#141e3c" />
+      <stop offset="60%" stop-color="#0b0f19" />
+      <stop offset="100%" stop-color="#07090e" />
+    </radialGradient>
+
+    <!-- Metallic Gold Borders and Accents -->
+    <linearGradient id="goldGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#fef08a" />
+      <stop offset="50%" stop-color="#f59e0b" />
+      <stop offset="100%" stop-color="#b45309" />
+    </linearGradient>
+
+    <!-- Celestial Sword Blade -->
+    <linearGradient id="bladeGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#ffffff" />
+      <stop offset="30%" stop-color="#00ffff" />
+      <stop offset="70%" stop-color="#00a8ff" />
+      <stop offset="100%" stop-color="#7928ca" />
+    </linearGradient>
+
+    <!-- Elemental Gradients: Fire, Ice, Lightning, Void -->
+    <!-- 1. Ice (Cyan) -->
+    <linearGradient id="iceGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#ffffff" />
+      <stop offset="40%" stop-color="#00e5ff" />
+      <stop offset="100%" stop-color="#0072ff" />
+    </linearGradient>
+
+    <!-- 2. Fire (Red/Orange) -->
+    <linearGradient id="fireGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#fef08a" />
+      <stop offset="40%" stop-color="#ff4d2e" />
+      <stop offset="100%" stop-color="#b91c1c" />
+    </linearGradient>
+
+    <!-- 3. Lightning (Yellow/Gold) -->
+    <linearGradient id="lightningGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#ffffff" />
+      <stop offset="40%" stop-color="#ffd200" />
+      <stop offset="100%" stop-color="#eab308" />
+    </linearGradient>
+
+    <!-- 4. Void (Cosmic Purple) -->
+    <linearGradient id="voidGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#f5d0fe" />
+      <stop offset="40%" stop-color="#b05cff" />
+      <stop offset="100%" stop-color="#4c1d95" />
+    </linearGradient>
+
+    <!-- Neon Glow Filters -->
+    <filter id="glowFilter" x="-40%" y="-40%" width="180%" height="180%">
+      <feGaussianBlur stdDeviation="8" result="blur" />
+      <feMerge>
+        <feMergeNode in="blur" />
+        <feMergeNode in="SourceGraphic" />
+      </feMerge>
+    </filter>
+  </defs>
+
+  <!-- App Rounded Rect Frame -->
+  <rect width="512" height="512" rx="96" fill="url(#bgGlow)" />
+  <rect width="496" height="496" x="8" y="8" rx="88" fill="none" stroke="url(#goldGrad)" stroke-width="4" opacity="0.8" />
+  <rect width="484" height="484" x="14" y="14" rx="82" fill="none" stroke="#38bdf8" stroke-width="1.5" opacity="0.3" />
+
+  <!-- Arcane Celestial Rune Ring -->
+  <circle cx="256" cy="235" r="148" fill="none" stroke="#38bdf8" stroke-width="2.5" opacity="0.35" stroke-dasharray="8 6" />
+  <circle cx="256" cy="235" r="170" fill="none" stroke="url(#goldGrad)" stroke-width="1.5" opacity="0.4" stroke-dasharray="24 12" />
+
+  <!-- Center Celestial Spire Sword Aura & Blade -->
+  <!-- Sword Glow -->
+  <path d="M256 70 L275 190 L285 315 L256 360 L227 315 L237 190 Z" fill="#00d2ff" opacity="0.28" filter="url(#glowFilter)" />
+  <!-- Blade Body -->
+  <path d="M256 85 L269 195 L276 310 L256 348 L236 310 L243 195 Z" fill="url(#bladeGrad)" stroke="#ffffff" stroke-width="1.2" />
+  <!-- Fuller Center Line -->
+  <line x1="256" y1="105" x2="256" y2="335" stroke="#ffffff" stroke-width="3" stroke-linecap="round" opacity="0.9" />
+
+  <!-- Sword Crossguard -->
+  <path d="M192 312 Q256 332 320 312 Q300 340 256 340 Q212 340 192 312 Z" fill="url(#goldGrad)" stroke="#fef08a" stroke-width="1.5" />
+  <path d="M192 312 L165 290 L182 332 Z" fill="url(#goldGrad)" />
+  <path d="M320 312 L347 290 L330 332 Z" fill="url(#goldGrad)" />
+  
+  <!-- Hilt & Pommel -->
+  <rect x="250" y="340" width="12" height="38" rx="2.5" fill="#1e1b4b" stroke="url(#goldGrad)" stroke-width="1.5" />
+  <circle cx="256" cy="388" r="14" fill="url(#goldGrad)" stroke="#fef08a" stroke-width="1.5" />
+  <circle cx="256" cy="388" r="6" fill="#00ffff" filter="url(#glowFilter)" />
+
+  <!-- 4 ELEMENTAL ORBS (Fire, Ice, Lightning, Void) -->
+
+  <!-- 1. TOP: ICE (Cyan Crystal Snowflake) -->
+  <g transform="translate(256, 82)">
+    <circle r="36" fill="#0b172a" stroke="#00e5ff" stroke-width="3" />
+    <circle r="32" fill="url(#iceGrad)" opacity="0.25" filter="url(#glowFilter)" />
+    <!-- Snowflake Lines -->
+    <line x1="0" y1="-20" x2="0" y2="20" stroke="#00ffff" stroke-width="3.5" stroke-linecap="round" filter="url(#glowFilter)" />
+    <line x1="-17.3" y1="-10" x2="17.3" y2="10" stroke="#00ffff" stroke-width="3.5" stroke-linecap="round" filter="url(#glowFilter)" />
+    <line x1="-17.3" y1="10" x2="17.3" y2="-10" stroke="#00ffff" stroke-width="3.5" stroke-linecap="round" filter="url(#glowFilter)" />
+    <!-- Branchlets -->
+    <path d="M-6 -14 L0 -20 L6 -14 M-6 14 L0 20 L6 14" stroke="#ffffff" stroke-width="2" stroke-linecap="round" fill="none" />
+    <circle r="5" fill="#ffffff" />
+  </g>
+
+  <!-- 2. LEFT: FIRE (Crimson Flame) -->
+  <g transform="translate(98, 235)">
+    <circle r="36" fill="#200a08" stroke="#ff4d2e" stroke-width="3" />
+    <circle r="32" fill="url(#fireGrad)" opacity="0.25" filter="url(#glowFilter)" />
+    <!-- Flame Glyph -->
+    <path d="M0 20 C-16 16 -18 -2 -4 -16 C-2 -6 4 -8 6 -14 C16 -6 18 10 0 20 Z" fill="url(#fireGrad)" filter="url(#glowFilter)" />
+    <path d="M-1 16 C-8 13 -9 1 -2 -7 C-1 -2 2 -3 3 -6 C8 -2 9 6 -1 16 Z" fill="#fef08a" />
+  </g>
+
+  <!-- 3. RIGHT: LIGHTNING (Golden Spark Bolt) -->
+  <g transform="translate(414, 235)">
+    <circle r="36" fill="#1c1605" stroke="#ffd200" stroke-width="3" />
+    <circle r="32" fill="url(#lightningGrad)" opacity="0.25" filter="url(#glowFilter)" />
+    <!-- Lightning Bolt Glyph -->
+    <polygon points="4,-22 -14,0 0,0 -4,22 14,0 0,0" fill="url(#lightningGrad)" stroke="#ffffff" stroke-width="1.2" filter="url(#glowFilter)" />
+  </g>
+
+  <!-- 4. BOTTOM: VOID (Cosmic Deep Purple Vortex) -->
+  <g transform="translate(256, 442)">
+    <circle r="36" fill="#150824" stroke="#b05cff" stroke-width="3" />
+    <circle r="32" fill="url(#voidGrad)" opacity="0.3" filter="url(#glowFilter)" />
+    <!-- Swirling Void Vortex Spiral -->
+    <path d="M0 -18 A18 18 0 0 1 18 0 A18 18 0 0 1 0 18 A18 18 0 0 1 -18 0 A14 14 0 0 1 0 -14 A10 10 0 0 1 10 0 A6 6 0 0 1 0 6" fill="none" stroke="url(#voidGrad)" stroke-width="4.5" stroke-linecap="round" filter="url(#glowFilter)" />
+    <circle r="6" fill="#07090e" stroke="#c084fc" stroke-width="2" />
+  </g>
+
+  <!-- Golden Game Title: RAIR -->
+  <g transform="translate(256, 385)">
+    <!-- Shadow -->
+    <text x="2" y="2" text-anchor="middle" font-family="'Cinzel', serif" font-weight="900" font-size="52" fill="#000000" letter-spacing="10" opacity="0.8">RAIR</text>
+    <!-- Text -->
+    <text x="0" y="0" text-anchor="middle" font-family="'Cinzel', serif" font-weight="900" font-size="52" fill="url(#goldGrad)" letter-spacing="10" stroke="#fef08a" stroke-width="1" filter="url(#glowFilter)">RAIR</text>
+  </g>
+</svg>

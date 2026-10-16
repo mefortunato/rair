@@ -2,6 +2,8 @@
 	import { game } from '#lib/stores/playerStore.svelte';
 	import { sfx } from '#lib/audio/sfx';
 
+	import { pwa } from '#lib/stores/pwaStore.svelte';
+
 	let player = $derived(game.player);
 	let isGuest = $derived(player?.is_guest !== false);
 	let handle = $derived(player?.handle || 'Ascendant Rogue');
@@ -139,7 +141,64 @@
 				</div>
 			</div>
 
-			<!-- Section 3: Progression & Danger Zone -->
+			<!-- Section 3: Progressive Web App & Offline Play -->
+			<div class="options-section">
+				<div class="section-header">
+					<span class="section-badge font-mono">PWA & APP</span>
+					<h3 class="section-title">App Installation & Offline Engine</h3>
+				</div>
+
+				<div class="pwa-settings-card">
+					<div class="pwa-status-row">
+						<div class="pwa-icon-box">
+							<img src="/icons/icon-72.png" alt="RAIR" class="pwa-preview-icon" />
+						</div>
+						<div class="pwa-meta">
+							<div class="pwa-title-row">
+								<span class="pwa-app-title">RAIR Mobile & Desktop PWA</span>
+								{#if pwa.isInstalled}
+									<span class="pwa-badge installed-badge">✓ Installed Standalone App</span>
+								{:else}
+									<span class="pwa-badge browser-badge">🌐 Browser View</span>
+								{/if}
+							</div>
+							<p class="pwa-app-desc">
+								{pwa.isInstalled
+									? 'Running in full-screen standalone mode with offline asset caching and hardware acceleration.'
+									: 'Install RAIR for distraction-free full-screen gameplay, faster startup, and offline Spire climbing.'}
+							</p>
+						</div>
+					</div>
+
+					<div class="pwa-controls-row">
+						{#if pwa.canInstall}
+							<button class="btn btn-primary btn-install-app" onclick={() => pwa.installApp()}>
+								<span>📲 Install RAIR to Home Screen</span>
+							</button>
+						{:else if pwa.isInstalled}
+							<div class="installed-notice">
+								<span class="check-icon">✨</span>
+								<span>App is installed and running natively</span>
+							</div>
+						{:else}
+							<div class="install-hint font-mono">
+								Tip: On mobile devices, use the browser menu (or Share → Add to Home Screen) to install.
+							</div>
+						{/if}
+
+						<button class="btn btn-secondary btn-sm" onclick={() => pwa.applyUpdate()}>
+							<span>🔄 Check for App Updates</span>
+						</button>
+					</div>
+
+					<div class="pwa-connectivity-row font-mono">
+						<span class="conn-dot {pwa.isOnline ? 'online' : 'offline'}"></span>
+						<span>{pwa.isOnline ? 'Cloud Synced & Online' : 'Offline Play Active (Local Cache)'}</span>
+					</div>
+				</div>
+			</div>
+
+			<!-- Section 4: Progression & Danger Zone -->
 			<div class="options-section danger-section">
 				<div class="section-header">
 					<span class="section-badge danger-badge font-mono">DANGER ZONE</span>
@@ -686,6 +745,140 @@
 
 	.btn-cancel:hover {
 		background: rgba(255, 255, 255, 0.15);
+	}
+
+	/* PWA Card Styles */
+	.pwa-settings-card {
+		background: rgba(16, 24, 44, 0.6);
+		border: 1px solid rgba(0, 210, 255, 0.2);
+		border-radius: 12px;
+		padding: 1.25rem;
+		display: flex;
+		flex-direction: column;
+		gap: 1rem;
+	}
+
+	.pwa-status-row {
+		display: flex;
+		align-items: center;
+		gap: 1rem;
+	}
+
+	.pwa-icon-box {
+		width: 56px;
+		height: 56px;
+		border-radius: 12px;
+		overflow: hidden;
+		flex-shrink: 0;
+		border: 1.5px solid rgba(0, 210, 255, 0.4);
+		box-shadow: 0 0 14px rgba(0, 210, 255, 0.2);
+	}
+
+	.pwa-preview-icon {
+		width: 100%;
+		height: 100%;
+		object-fit: cover;
+	}
+
+	.pwa-meta {
+		display: flex;
+		flex-direction: column;
+		gap: 0.25rem;
+		flex: 1;
+	}
+
+	.pwa-title-row {
+		display: flex;
+		align-items: center;
+		gap: 0.65rem;
+		flex-wrap: wrap;
+	}
+
+	.pwa-app-title {
+		font-weight: 700;
+		font-size: 1rem;
+		color: #ffffff;
+	}
+
+	.pwa-badge {
+		font-size: 0.7rem;
+		padding: 0.15rem 0.55rem;
+		border-radius: 9999px;
+		font-weight: 600;
+	}
+
+	.installed-badge {
+		background: rgba(16, 185, 129, 0.15);
+		color: #34d399;
+		border: 1px solid rgba(16, 185, 129, 0.35);
+	}
+
+	.browser-badge {
+		background: rgba(56, 189, 248, 0.15);
+		color: #38bdf8;
+		border: 1px solid rgba(56, 189, 248, 0.35);
+	}
+
+	.pwa-app-desc {
+		font-size: 0.8rem;
+		color: var(--text-muted);
+		line-height: 1.4;
+	}
+
+	.pwa-controls-row {
+		display: flex;
+		align-items: center;
+		gap: 0.75rem;
+		flex-wrap: wrap;
+	}
+
+	.btn-install-app {
+		background: linear-gradient(135deg, #00d2ff 0%, #2563eb 100%);
+		border-color: #38bdf8;
+		color: #050b14;
+		font-weight: 700;
+		padding: 0.65rem 1.15rem;
+		box-shadow: 0 4px 14px rgba(0, 210, 255, 0.35);
+	}
+
+	.installed-notice {
+		display: flex;
+		align-items: center;
+		gap: 0.4rem;
+		font-size: 0.8rem;
+		color: #a7f3d0;
+	}
+
+	.install-hint {
+		font-size: 0.72rem;
+		color: var(--text-muted);
+		flex: 1;
+	}
+
+	.pwa-connectivity-row {
+		display: flex;
+		align-items: center;
+		gap: 0.5rem;
+		font-size: 0.75rem;
+		color: var(--text-secondary);
+		padding-top: 0.5rem;
+		border-top: 1px solid rgba(255, 255, 255, 0.06);
+	}
+
+	.conn-dot {
+		width: 8px;
+		height: 8px;
+		border-radius: 50%;
+	}
+
+	.conn-dot.online {
+		background: #10b981;
+		box-shadow: 0 0 6px #10b981;
+	}
+
+	.conn-dot.offline {
+		background: #f59e0b;
+		box-shadow: 0 0 6px #f59e0b;
 	}
 
 	.modal-footer {

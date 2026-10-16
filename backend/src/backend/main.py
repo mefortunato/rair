@@ -11,6 +11,9 @@ from backend.routes.ascension import router as ascension_router
 from backend.routes.minigames import router as minigames_router
 from backend.routes.leaderboard import router as leaderboard_router
 from backend.routes.auth import router as auth_router
+import mimetypes
+
+mimetypes.add_type("application/manifest+json", ".webmanifest")
 
 def resolve_static_dir() -> Path | None:
     candidates = []
@@ -91,6 +94,19 @@ if static_dir:
         
         file_path = static_dir / full_path
         if full_path and file_path.is_file():
+            if full_path == "service-worker.js":
+                return FileResponse(
+                    file_path,
+                    media_type="application/javascript",
+                    headers={
+                        "Service-Worker-Allowed": "/",
+                        "Cache-Control": "no-cache, no-store, must-revalidate"
+                    }
+                )
+            if full_path == ".well-known/assetlinks.json":
+                return FileResponse(file_path, media_type="application/json")
+            if full_path in ("manifest.webmanifest", "manifest.json"):
+                return FileResponse(file_path, media_type="application/manifest+json")
             return FileResponse(file_path)
         
         index_file = static_dir / "index.html"

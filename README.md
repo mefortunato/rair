@@ -29,6 +29,8 @@ A modern, web-first idle role-playing game inspired by the incremental prestige 
    - Automatically computes simulated floor clears, gold, and gear drops for time away (up to 24 hours).
 7. **Procedural Web Audio API Synthesizer**:
    - Zero external audio files; all blades, crits, chimes, and fanfare synthesized dynamically via Web Audio API.
+8. **Progressive Web App & Google Play Store Ready**:
+   - Offline-capable service worker, web app manifest, maskable 4-element icon suite (Fire, Ice, Lightning, Void), in-app install triggers, Digital Asset Links (`.well-known/assetlinks.json`), and Trusted Web Activity (TWA) bundling guide for the Google Play Store (see [Google Play Store PWA Guide](docs/GOOGLE_PLAY_STORE_PWA_GUIDE.md)).
 
 ---
 
