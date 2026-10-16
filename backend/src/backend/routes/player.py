@@ -4,7 +4,8 @@ from typing import Optional
 from fastapi import APIRouter, HTTPException, Header
 from pydantic import BaseModel
 from backend.database import db_manager
-from backend.models.player import Player, SyncPayload
+from backend.models.player import Player, SyncPayload, ActiveRun, PlayerStats
+from backend.models.ascension import AscensionTree
 from backend.models.gear import GearSlot, Rarity, ElementType, GearItem, Affix
 from backend.engine.offline import calculate_offline_gains
 
@@ -17,8 +18,7 @@ class InitRequest(BaseModel):
 class SalvageRequest(BaseModel):
     item_id: str
 
-def create_starter_player(guest_token: str, handle: str = "Ascendant Rogue") -> Player:
-    player_id = f"rair_{uuid.uuid4().hex[:12]}"
+def create_starter_gear() -> dict[str, Optional[GearItem]]:
     starter_weapon = GearItem(
         id=f"gear_{uuid.uuid4().hex[:8]}",
         name="Novice Spire Blade",
@@ -32,18 +32,34 @@ def create_starter_player(guest_token: str, handle: str = "Ascendant Rogue") -> 
         salvage_value=10,
         is_equipped=True
     )
-    equipped = {
+    return {
         GearSlot.WEAPON.value: starter_weapon,
         GearSlot.ARMOR.value: None,
         GearSlot.RING.value: None,
         GearSlot.AMULET.value: None,
         GearSlot.CATALYST.value: None,
     }
+
+def create_starter_player(
+    guest_token: str,
+    handle: str = "Ascendant Rogue",
+    auth_provider: str = "guest",
+    google_id: Optional[str] = None,
+    email: Optional[str] = None,
+    avatar_url: Optional[str] = None,
+    is_guest: bool = True
+) -> Player:
+    player_id = f"rair_{uuid.uuid4().hex[:12]}"
     return Player(
         player_id=player_id,
         guest_token=guest_token,
         handle=handle,
-        equipped_gear=equipped,
+        auth_provider=auth_provider,
+        google_id=google_id,
+        email=email,
+        avatar_url=avatar_url,
+        is_guest=is_guest,
+        equipped_gear=create_starter_gear(),
         highest_floor=1
     )
 
@@ -89,6 +105,11 @@ async def sync_player_state(payload: SyncPayload):
             player_id=payload.player_id,
             guest_token=payload.guest_token,
             handle=payload.handle or "Ascendant Rogue",
+            auth_provider=payload.auth_provider or "guest",
+            google_id=payload.google_id,
+            email=payload.email,
+            avatar_url=payload.avatar_url,
+            is_guest=payload.is_guest if payload.is_guest is not None else True,
             active_run=payload.active_run,
             stats=payload.stats,
             equipped_gear=payload.equipped_gear,
@@ -107,11 +128,48 @@ async def sync_player_state(payload: SyncPayload):
         player.highest_floor = max(player.highest_floor, payload.highest_floor, payload.active_run.current_floor)
         if payload.handle:
             player.handle = payload.handle
+        if payload.auth_provider:
+            player.auth_provider = payload.auth_provider
+        if payload.google_id:
+            player.google_id = payload.google_id
+        if payload.email:
+            player.email = payload.email
+        if payload.avatar_url:
+            player.avatar_url = payload.avatar_url
+        if payload.is_guest is not None:
+            player.is_guest = payload.is_guest
         player.updated_at = now
         player.last_active = now
 
     await db_manager.save_player(player.model_dump())
     return {"status": "synced", "highest_floor": player.highest_floor}
+
+@router.post("/reset")
+async def reset_player(x_guest_token: str = Header(...)):
+    player_doc = await db_manager.get_player_by_token(x_guest_token)
+    if not player_doc:
+        raise HTTPException(status_code=404, detail="Player session not found")
+        
+    player = Player.model_validate(player_doc)
+    now = datetime.now(timezone.utc)
+    
+    # Reset all game progression back to day 1 starter state
+    player.highest_floor = 1
+    player.ascension_level = 0
+    player.active_run = ActiveRun()
+    player.stats = PlayerStats()
+    player.ascension_tree = AscensionTree.default_tree()
+    player.equipped_gear = create_starter_gear()
+    player.inventory = []
+    player.updated_at = now
+    player.last_active = now
+    
+    await db_manager.save_player(player.model_dump())
+    return {
+        "status": "reset",
+        "message": "Player progression completely reset to starting state",
+        "player": player
+    }
 
 @router.post("/salvage")
 async def salvage_item(req: SalvageRequest, x_guest_token: str = Header(...)):

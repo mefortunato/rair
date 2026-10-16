@@ -7,6 +7,7 @@ from backend.routes.player import router as player_router
 from backend.routes.ascension import router as ascension_router
 from backend.routes.minigames import router as minigames_router
 from backend.routes.leaderboard import router as leaderboard_router
+from backend.routes.auth import router as auth_router
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -34,6 +35,7 @@ app.add_middleware(
 
 # Include Routers
 app.include_router(player_router)
+app.include_router(auth_router)
 app.include_router(ascension_router)
 app.include_router(minigames_router)
 app.include_router(leaderboard_router)

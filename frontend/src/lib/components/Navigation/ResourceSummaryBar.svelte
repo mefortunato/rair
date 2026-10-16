@@ -14,8 +14,11 @@
 	let isBoss = $derived(run?.is_boss_floor || false);
 	let highestFloor = $derived(player?.highest_floor || 1);
 	let activeBuffs = $derived(run?.active_buffs || []);
+	let isGuest = $derived(player?.is_guest !== false);
+	let handle = $derived(player?.handle || 'Ascendant Rogue');
+	let avatar = $derived(player?.avatar_url);
 
-	let soundEnabled = $state(true);
+	let soundEnabled = $state(sfx.enabled);
 
 	function toggleAudio() {
 		soundEnabled = sfx.toggleSound();
@@ -123,6 +126,33 @@
 			</button>
 		{/if}
 
+		<!-- Account Status / Google Link -->
+		{#if isGuest}
+			<button
+				class="account-status-btn guest-btn"
+				onclick={() => game.openAuthModal()}
+				title="Playing as Guest • Click to sign in with Google to save progress!"
+			>
+				<span class="auth-dot guest-dot"></span>
+				<span class="auth-label">Guest</span>
+				<span class="auth-action-chip">Save ☁️</span>
+			</button>
+		{:else}
+			<button
+				class="account-status-btn google-btn"
+				onclick={() => game.openGameOptionsModal()}
+				title="Signed in with Google as {handle} • Cloud saved"
+			>
+				{#if avatar}
+					<img src={avatar} alt="" class="auth-avatar-mini" />
+				{:else}
+					<span class="auth-avatar-fallback">{handle.charAt(0).toUpperCase()}</span>
+				{/if}
+				<span class="auth-label">{handle}</span>
+				<span class="auth-cloud-tag font-mono">CLOUD</span>
+			</button>
+		{/if}
+
 		<!-- Audio Toggle -->
 		<button
 			class="audio-toggle-btn {soundEnabled ? 'sound-on' : 'sound-off'}"
@@ -130,6 +160,16 @@
 			title="Toggle Sound Effects"
 		>
 			<span>{soundEnabled ? '🔊' : '🔇'}</span>
+		</button>
+
+		<!-- Game Options Gear Button -->
+		<button
+			class="options-toggle-btn"
+			onclick={() => game.openGameOptionsModal()}
+			title="Game Options & Hard Reset"
+			aria-label="Game Options"
+		>
+			<span>⚙️</span>
 		</button>
 	</div>
 </header>
@@ -364,6 +404,118 @@
 	.audio-toggle-btn.sound-on {
 		border-color: rgba(0, 210, 255, 0.4);
 		color: #00d2ff;
+	}
+
+	/* Account Status Button & Cloud Pill */
+	.account-status-btn {
+		display: flex;
+		align-items: center;
+		gap: 0.45rem;
+		padding: 0.3rem 0.65rem;
+		border-radius: 999px;
+		font-size: 0.75rem;
+		font-weight: 700;
+		cursor: pointer;
+		transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+		background: rgba(255, 255, 255, 0.05);
+		border: 1px solid var(--border-medium);
+		color: var(--text-primary);
+	}
+
+	.account-status-btn:hover {
+		transform: translateY(-1px);
+	}
+
+	.account-status-btn.guest-btn {
+		background: rgba(245, 158, 11, 0.1);
+		border-color: rgba(245, 158, 11, 0.35);
+		color: #fde68a;
+	}
+
+	.account-status-btn.guest-btn:hover {
+		background: rgba(245, 158, 11, 0.18);
+		border-color: #f59e0b;
+		box-shadow: 0 0 12px rgba(245, 158, 11, 0.3);
+	}
+
+	.guest-dot {
+		width: 7px;
+		height: 7px;
+		border-radius: 50%;
+		background: #f59e0b;
+		box-shadow: 0 0 5px #f59e0b;
+	}
+
+	.auth-action-chip {
+		font-size: 0.65rem;
+		background: linear-gradient(135deg, #2563eb, #1d4ed8);
+		color: #ffffff;
+		padding: 0.1rem 0.45rem;
+		border-radius: 999px;
+		letter-spacing: 0.04em;
+	}
+
+	.account-status-btn.google-btn {
+		background: rgba(16, 185, 129, 0.1);
+		border-color: rgba(16, 185, 129, 0.4);
+		color: #a7f3d0;
+	}
+
+	.account-status-btn.google-btn:hover {
+		background: rgba(16, 185, 129, 0.2);
+		border-color: #10b981;
+		box-shadow: 0 0 12px rgba(16, 185, 129, 0.3);
+	}
+
+	.auth-avatar-mini {
+		width: 18px;
+		height: 18px;
+		border-radius: 50%;
+		object-fit: cover;
+	}
+
+	.auth-avatar-fallback {
+		width: 18px;
+		height: 18px;
+		border-radius: 50%;
+		background: #2563eb;
+		color: #ffffff;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		font-size: 0.65rem;
+		font-weight: 800;
+	}
+
+	.auth-cloud-tag {
+		font-size: 0.6rem;
+		background: rgba(56, 189, 248, 0.2);
+		color: #38bdf8;
+		padding: 0.1rem 0.35rem;
+		border-radius: 4px;
+	}
+
+	/* Options Gear Button */
+	.options-toggle-btn {
+		background: rgba(255, 255, 255, 0.05);
+		border: 1px solid var(--border-subtle);
+		color: var(--text-secondary);
+		padding: 0.35rem 0.55rem;
+		border-radius: 8px;
+		font-size: 0.85rem;
+		cursor: pointer;
+		transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+		display: flex;
+		align-items: center;
+		justify-content: center;
+	}
+
+	.options-toggle-btn:hover {
+		background: rgba(0, 210, 255, 0.15);
+		border-color: #00d2ff;
+		color: #ffffff;
+		transform: rotate(30deg) scale(1.05);
+		box-shadow: 0 0 12px rgba(0, 210, 255, 0.25);
 	}
 
 	@keyframes pulseGlow {

@@ -31,6 +31,7 @@ class DatabaseManager:
             # Setup indices
             await self.db.players.create_index("player_id", unique=True)
             await self.db.players.create_index("guest_token")
+            await self.db.players.create_index("google_id")
             await self.db.players.create_index("highest_floor")
             logger.info("Successfully connected to MongoDB with indices created.")
         except Exception as e:
@@ -60,6 +61,30 @@ class DatabaseManager:
             if p.get("guest_token") == guest_token:
                 return p
         return None
+
+    async def get_player_by_google_id(self, google_id: str) -> Optional[dict]:
+        if not google_id:
+            return None
+        if self.is_connected and self.db is not None:
+            doc = await self.db.players.find_one({"google_id": google_id})
+            if doc and "_id" in doc:
+                del doc["_id"]
+            return doc
+        for p in self._memory_store["players"].values():
+            if p.get("google_id") == google_id:
+                return p
+        return None
+
+    async def delete_player(self, player_id: str) -> bool:
+        self._memory_store["players"].pop(player_id, None)
+        if self.is_connected and self.db is not None:
+            try:
+                await self.db.players.delete_one({"player_id": player_id})
+                return True
+            except Exception as e:
+                logger.error(f"Error deleting player from MongoDB: {e}")
+                return False
+        return True
 
     async def save_player(self, player_dict: dict) -> bool:
         player_id = player_dict["player_id"]

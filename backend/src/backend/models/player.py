@@ -52,6 +52,11 @@ class Player(BaseModel):
     player_id: str
     guest_token: str
     handle: str = "Ascendant Rogue"
+    auth_provider: str = "guest"     # "guest" or "google"
+    google_id: Optional[str] = None
+    email: Optional[str] = None
+    avatar_url: Optional[str] = None
+    is_guest: bool = True
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     updated_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     last_active: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
@@ -79,3 +84,8 @@ class SyncPayload(BaseModel):
     ascension_tree: AscensionTree
     highest_floor: int
     handle: Optional[str] = None
+    auth_provider: Optional[str] = None
+    google_id: Optional[str] = None
+    email: Optional[str] = None
+    avatar_url: Optional[str] = None
+    is_guest: Optional[bool] = None

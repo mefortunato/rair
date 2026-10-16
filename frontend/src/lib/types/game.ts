@@ -105,6 +105,11 @@ export interface Player {
 	player_id: string;
 	guest_token: string;
 	handle: string;
+	auth_provider?: 'guest' | 'google';
+	google_id?: string;
+	email?: string;
+	avatar_url?: string;
+	is_guest?: boolean;
 	created_at: string;
 	updated_at: string;
 	last_active: string;
@@ -115,6 +120,22 @@ export interface Player {
 	ascension_tree: AscensionTree;
 	equipped_gear: Record<GearSlot, GearItem | null>;
 	inventory: GearItem[];
+}
+
+export interface ConflictSummary {
+	handle: string;
+	highest_floor: number;
+	sparks: number;
+	inventory_count: number;
+}
+
+export interface LinkGoogleResponse {
+	status: 'linked' | 'cloud_loaded' | 'conflict' | 'already_linked';
+	message?: string;
+	player?: Player;
+	token?: string;
+	guest_summary?: ConflictSummary;
+	cloud_summary?: ConflictSummary;
 }
 
 export interface OfflineReport {

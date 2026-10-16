@@ -22,7 +22,7 @@ class GameStore {
 	public player: Player | null = $state(null);
 	public isLoaded: boolean = $state(false);
 	public offlineReport: OfflineReport | null = $state(null);
-	public activeModal: 'ascension' | 'inventory' | 'leaderboard' | 'minigames' | 'offline' | 'perk_draft' | null = $state(null);
+	public activeModal: 'ascension' | 'inventory' | 'leaderboard' | 'minigames' | 'offline' | 'perk_draft' | 'game_options' | 'auth' | null = $state(null);
 	public activeMinigame: 'overdrive_ring' | 'rune_weave' | 'alchemical_transmutation' = $state('overdrive_ring');
 	public floatingDamages: FloatingDamage[] = $state([]);
 	public toasts: ToastItem[] = $state([]);
@@ -773,6 +773,153 @@ class GameStore {
 			const pct = Math.round((buff.multiplier - 1) * 100);
 			this.addToast(`Gambit Victorious: ${buff.name} (+${pct}%)!`, 'success');
 		}
+	}
+
+	// Modal Controls
+	public openGameOptionsModal() {
+		this.activeModal = 'game_options';
+	}
+
+	public openAuthModal() {
+		this.activeModal = 'auth';
+	}
+
+	public closeModal() {
+		this.activeModal = null;
+	}
+
+	// Hard Reset Everything
+	public async resetEverything(): Promise<boolean> {
+		if (!this.player) return false;
+		try {
+			const res = await api.resetPlayer();
+			this.player = res.player;
+			if (this.player) {
+				if (!this.player.active_run.perks) this.player.active_run.perks = [];
+				if (this.player.active_run.pending_perk_picks === undefined) this.player.active_run.pending_perk_picks = 0;
+			}
+			this.currentPerkChoices = [];
+			this.currentRerollCount = 0;
+			this.consecutiveHits = 0;
+			this.isBossEnraged = false;
+			this.bossTimer = 30;
+			this.attackAccumulator = 0;
+			this.floatingDamages = [];
+
+			sfx.playAscension();
+			this.addToast('🌟 Reset Complete: All progression reset back to Floor 1!', 'ascend');
+			if (this.activeModal === 'game_options') {
+				this.activeModal = null;
+			}
+			return true;
+		} catch (err: any) {
+			this.addToast(err.message || 'Reset failed', 'warning');
+			return false;
+		}
+	}
+
+	// Authentication Handlers
+	public async loginWithGoogle(payload: {
+		credential?: string;
+		google_id?: string;
+		email?: string;
+		name?: string;
+		picture?: string;
+		guest_token_to_link?: string;
+	}): Promise<boolean> {
+		try {
+			const res = await api.loginWithGoogle(payload);
+			this.player = res.player;
+			if (this.player) {
+				if (!this.player.active_run.perks) this.player.active_run.perks = [];
+				if (this.player.active_run.pending_perk_picks === undefined) this.player.active_run.pending_perk_picks = 0;
+			}
+			this.currentPerkChoices = [];
+			this.currentRerollCount = 0;
+			this.consecutiveHits = 0;
+			this.isBossEnraged = false;
+			this.bossTimer = 30;
+			this.attackAccumulator = 0;
+
+			sfx.playLevelUp();
+			const handle = this.player?.handle || 'Google Ascendant';
+			this.addToast(`✨ Welcome, ${handle}! Cloud save active.`, 'success');
+			if (this.activeModal === 'auth' || this.activeModal === 'game_options') {
+				this.activeModal = null;
+			}
+			return true;
+		} catch (err: any) {
+			this.addToast(err.message || 'Google sign-in failed', 'warning');
+			return false;
+		}
+	}
+
+	public async linkGoogleAccount(payload: {
+		credential?: string;
+		google_id?: string;
+		email?: string;
+		name?: string;
+		picture?: string;
+		conflict_strategy?: 'keep_guest' | 'load_cloud';
+	}): Promise<any> {
+		try {
+			const res = await api.linkGoogleAccount(payload);
+			if (res.status === 'conflict') {
+				return res;
+			}
+			if (res.player) {
+				this.player = res.player;
+				if (this.player) {
+					if (!this.player.active_run.perks) this.player.active_run.perks = [];
+					if (this.player.active_run.pending_perk_picks === undefined) this.player.active_run.pending_perk_picks = 0;
+				}
+				this.currentPerkChoices = [];
+				this.currentRerollCount = 0;
+				this.consecutiveHits = 0;
+			}
+			sfx.playLevelUp();
+			this.addToast(`🎉 Progress saved! Cloud backup connected.`, 'success');
+			if (this.activeModal === 'auth' || this.activeModal === 'game_options') {
+				this.activeModal = null;
+			}
+			return res;
+		} catch (err: any) {
+			this.addToast(err.message || 'Linking failed', 'warning');
+			throw err;
+		}
+	}
+
+	public async loginAsGuest(handle?: string, clearExisting: boolean = false): Promise<boolean> {
+		try {
+			const res = await api.loginAsGuest(handle, clearExisting);
+			this.player = res.player;
+			if (this.player) {
+				if (!this.player.active_run.perks) this.player.active_run.perks = [];
+				if (this.player.active_run.pending_perk_picks === undefined) this.player.active_run.pending_perk_picks = 0;
+			}
+			this.currentPerkChoices = [];
+			this.currentRerollCount = 0;
+			this.consecutiveHits = 0;
+			this.isBossEnraged = false;
+			this.bossTimer = 30;
+			this.attackAccumulator = 0;
+
+			sfx.playSlash();
+			this.addToast('👤 Playing as Guest (progress saved in local browser).', 'info');
+			if (this.activeModal === 'auth' || this.activeModal === 'game_options') {
+				this.activeModal = null;
+			}
+			return true;
+		} catch (err: any) {
+			this.addToast(err.message || 'Guest login failed', 'warning');
+			return false;
+		}
+	}
+
+	public async logout(): Promise<void> {
+		api.clearSession();
+		await this.loginAsGuest('Guest Ascendant', true);
+		this.addToast('👋 Logged out to fresh Guest session.', 'info');
 	}
 }
 

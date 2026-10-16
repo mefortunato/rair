@@ -10,6 +10,8 @@
 	import LeaderboardModal from '#lib/components/LeaderboardModal.svelte';
 	import OfflineModal from '#lib/components/OfflineModal.svelte';
 	import PerkDraftModal from '#lib/components/PerkDraftModal.svelte';
+	import GameOptionsModal from '#lib/components/GameOptionsModal.svelte';
+	import AuthModal from '#lib/components/AuthModal.svelte';
 
 	let { children }: LayoutProps = $props();
 </script>
@@ -40,6 +42,10 @@
 		<OfflineModal />
 	{:else if game.activeModal === 'perk_draft'}
 		<PerkDraftModal />
+	{:else if game.activeModal === 'game_options'}
+		<GameOptionsModal />
+	{:else if game.activeModal === 'auth'}
+		<AuthModal />
 	{/if}
 </div>
 
