@@ -16,7 +16,7 @@ class MinigameStore {
 	public state = $state<MinigameContainerState>('CHOICE_DRAFT');
 
 	// Cooldown
-	public cooldownDuration = 45; // seconds
+	public cooldownDuration = 35; // seconds
 	public cooldownRemaining = $state(0);
 	private cooldownTimer: number | null = null;
 
@@ -68,22 +68,20 @@ class MinigameStore {
 		const score = this.currentScore;
 		const diff = this.selectedDifficulty;
 
-		let dMult = 1.0;
-		let maxBuff = 0.35;
+		let maxBuff = 0.75;
 		let maxDebuff = 0.15;
 
 		if (diff === 'abyssal') {
-			dMult = 3.0;
-			maxBuff = 1.6;
-			maxDebuff = 0.6;
+			maxBuff = 3.5;
+			maxDebuff = 0.55;
 		} else if (diff === 'adept') {
-			dMult = 1.8;
-			maxBuff = 0.75;
+			maxBuff = 1.8;
 			maxDebuff = 0.35;
 		}
 
 		if (score >= 0) {
-			const bonus = Math.min(maxBuff, (score / 180.0) * 0.2 * dMult);
+			const scoreRatio = Math.min(1.0, score / 120.0);
+			const bonus = maxBuff * scoreRatio;
 			const mult = parseFloat((1.0 + bonus).toFixed(2));
 			return {
 				multiplier: mult,
@@ -91,8 +89,8 @@ class MinigameStore {
 				isDebuff: false
 			};
 		} else {
-			const penalty = Math.min(maxDebuff, (Math.abs(score) / 180.0) * 0.15 * dMult);
-			const mult = parseFloat(Math.max(0.4, 1.0 - penalty).toFixed(2));
+			const penalty = Math.min(maxDebuff, (Math.abs(score) / 120.0) * maxDebuff);
+			const mult = parseFloat(Math.max(0.35, 1.0 - penalty).toFixed(2));
 			return {
 				multiplier: mult,
 				percent: Math.round((mult - 1) * 100),
@@ -195,7 +193,7 @@ class MinigameStore {
 	}
 
 	// Cooldown timer handler
-	public startCooldown(seconds: number = 45) {
+	public startCooldown(seconds: number = 35) {
 		this.cooldownDuration = seconds;
 		this.cooldownRemaining = seconds;
 		this.state = 'COOLDOWN';

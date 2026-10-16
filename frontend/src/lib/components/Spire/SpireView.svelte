@@ -19,37 +19,37 @@
 		{
 			key: 'weapon_sharpening',
 			name: 'Weapon Sharpening',
-			desc: '+5 Base Attack Power',
+			desc: '+2 Base Attack Power',
 			icon: '⚔️'
 		},
 		{
 			key: 'swift_strike',
 			name: 'Swift Strike',
-			desc: '+0.15 Hits / Second',
+			desc: '+0.06 Hits / Second',
 			icon: '⚡'
 		},
 		{
 			key: 'focus_training',
 			name: 'Focus Training',
-			desc: '+2.0% Critical Chance',
+			desc: '+1.2% Critical Chance',
 			icon: '🎯'
 		},
 		{
 			key: 'deadly_precision',
 			name: 'Deadly Precision',
-			desc: '+15% Critical Damage',
+			desc: '+8% Critical Damage',
 			icon: '💥'
 		},
 		{
 			key: 'elemental_infusion',
 			name: 'Elemental Infusion',
-			desc: '+10% Elemental Damage',
+			desc: '+6% Elemental Damage',
 			icon: '🔮'
 		},
 		{
 			key: 'midas_greed',
 			name: 'Midas Greed',
-			desc: '+15% Gold Bounty Multiplier',
+			desc: '+8% Gold Bounty Multiplier',
 			icon: '💰'
 		}
 	];

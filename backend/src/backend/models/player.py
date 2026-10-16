@@ -27,8 +27,8 @@ class ActiveRun(BaseModel):
     highest_floor_this_run: int = 1
     gold: float = 0.0
     total_gold_this_run: float = 0.0
-    guardian_hp_current: float = 120.0
-    guardian_hp_max: float = 120.0
+    guardian_hp_current: float = 250.0
+    guardian_hp_max: float = 250.0
     guardian_element: ElementType = ElementType.FIRE
     is_boss_floor: bool = False
     upgrades: ActiveUpgrades = Field(default_factory=ActiveUpgrades)

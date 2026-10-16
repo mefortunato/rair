@@ -182,11 +182,11 @@
 						<span class="diff-badge">NOVICE</span>
 						<span class="diff-risk">Low Risk / Safe</span>
 						<div class="diff-stats">
-							<span class="stat-row text-green">Max Buff: +35%</span>
+							<span class="stat-row text-green">Max Buff: +75% (1.75x)</span>
 							<span class="stat-row text-muted">Max Debuff: -15%</span>
-							<span class="mult-tag font-mono">1.0x Scale</span>
+							<span class="mult-tag font-mono">1.4x Scale • ~3x Floor Gold</span>
 						</div>
-						<p class="diff-desc">Gentle speeds, wide hit zones, reduced bust likelihood.</p>
+						<p class="diff-desc">Gentle speeds, wide hit zones, safe instant gold payout.</p>
 					</button>
 
 					<!-- Adept -->
@@ -198,11 +198,11 @@
 						<span class="diff-badge">ADEPT</span>
 						<span class="diff-risk">Moderate Stakes</span>
 						<div class="diff-stats">
-							<span class="stat-row text-green">Max Buff: +75%</span>
+							<span class="stat-row text-green">Max Buff: +180% (2.8x)</span>
 							<span class="stat-row text-muted">Max Debuff: -35%</span>
-							<span class="mult-tag font-mono">1.8x Scale</span>
+							<span class="mult-tag font-mono">2.4x Scale • ~6x Floor Gold</span>
 						</div>
-						<p class="diff-desc">Standard speeds, moving sweet spots, moderate card variance.</p>
+						<p class="diff-desc">Standard speeds, moving sweet spots, powerful short-term burst.</p>
 					</button>
 
 					<!-- Abyssal -->
@@ -213,11 +213,11 @@
 						<span class="diff-badge">ABYSSAL</span>
 						<span class="diff-risk text-red">High Risk / Brutal</span>
 						<div class="diff-stats">
-							<span class="stat-row text-green">Max Buff: +160%</span>
-							<span class="stat-row text-red">Max Debuff: -60%</span>
-							<span class="mult-tag font-mono">3.0x Scale</span>
+							<span class="stat-row text-green">Max Buff: +350% (4.5x)</span>
+							<span class="stat-row text-red">Max Debuff: -55%</span>
+							<span class="mult-tag font-mono">4.0x Scale • ~12x Floor Gold</span>
 						</div>
-						<p class="diff-desc">Blistering speeds, razor-thin zones, high chance of busting!</p>
+						<p class="diff-desc">Blistering speeds, razor zones, godlike combat surge & fortune!</p>
 					</button>
 				</div>
 			</div>
@@ -333,6 +333,13 @@
 						</span>
 						<span class="award-dur font-mono">Duration: {Math.round(buff.duration_seconds)}s</span>
 					</div>
+
+					{#if buff.gold_reward && buff.gold_reward > 0}
+						<div class="gold-award-box font-mono">
+							<span class="gold-icon">🪙</span>
+							<span class="gold-text">Astral Bounty Harvested: <strong>+{Math.round(buff.gold_reward).toLocaleString()} Gold!</strong></span>
+						</div>
+					{/if}
 
 					<div class="session-stats">
 						<span>Played: {minigameManager.lastSessionDuration}s</span>
@@ -1089,6 +1096,25 @@
 		font-size: 1.25rem;
 		font-weight: 900;
 		color: #f87171;
+	}
+
+	.gold-award-box {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		gap: 0.5rem;
+		background: rgba(255, 210, 0, 0.12);
+		border: 1px solid rgba(255, 210, 0, 0.4);
+		color: #ffd200;
+		padding: 0.65rem 1rem;
+		border-radius: 10px;
+		width: 100%;
+		font-size: 0.88rem;
+		box-shadow: 0 0 12px rgba(255, 210, 0, 0.2);
+	}
+
+	.gold-award-box strong {
+		color: #ffffff;
 	}
 
 	.award-dur {

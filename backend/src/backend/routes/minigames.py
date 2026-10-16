@@ -4,6 +4,8 @@ from backend.database import db_manager
 from backend.models.minigames import MinigameType, ActiveBuff, ClaimMinigameRequest
 from backend.models.player import Player
 
+from backend.engine.scaling import get_floor_gold_reward
+
 router = APIRouter(prefix="/api/minigame", tags=["Minigames"])
 
 STAT_LABELS = {
@@ -42,11 +44,17 @@ async def claim_minigame_buff(req: ClaimMinigameRequest, x_guest_token: str = He
         overdrive_bonus = player.ascension_tree.nodes["overdrive_resonance"].current_rank * 0.40
         
     buff = None
+    gold_reward = 0.0
     
     # Legacy fallbacks
     if req.minigame_type == MinigameType.OVERDRIVE_RING.value:
-        mult = (3.0 + overdrive_bonus) if req.success else 1.5
-        dur = 12.0 * (1.0 + overdrive_bonus * 0.5)
+        mult = (3.5 + overdrive_bonus) if req.success else 1.8
+        dur = 25.0 * (1.0 + overdrive_bonus * 0.5)
+        if req.success:
+            floor_base_gold = get_floor_gold_reward(player.active_run.current_floor, 1.0)
+            gold_reward = round(floor_base_gold * 4.0, 1)
+            player.active_run.gold += gold_reward
+            player.active_run.total_gold_this_run += gold_reward
         buff = ActiveBuff(
             id=f"buff_{uuid.uuid4().hex[:8]}",
             name="Overdrive Frenzy",
@@ -54,11 +62,17 @@ async def claim_minigame_buff(req: ClaimMinigameRequest, x_guest_token: str = He
             buff_type="all_damage",
             duration_seconds=round(dur, 1),
             time_remaining=round(dur, 1),
-            is_debuff=False
+            is_debuff=False,
+            gold_reward=gold_reward
         )
     elif req.minigame_type == MinigameType.RUNE_WEAVE.value:
-        mult = (2.5 + overdrive_bonus) if req.success else 1.4
-        dur = 15.0 * (1.0 + overdrive_bonus * 0.5)
+        mult = (3.0 + overdrive_bonus) if req.success else 1.6
+        dur = 30.0 * (1.0 + overdrive_bonus * 0.5)
+        if req.success:
+            floor_base_gold = get_floor_gold_reward(player.active_run.current_floor, 1.0)
+            gold_reward = round(floor_base_gold * 4.0, 1)
+            player.active_run.gold += gold_reward
+            player.active_run.total_gold_this_run += gold_reward
         buff = ActiveBuff(
             id=f"buff_{uuid.uuid4().hex[:8]}",
             name=f"Elemental Surge ({req.element.capitalize()})",
@@ -66,11 +80,17 @@ async def claim_minigame_buff(req: ClaimMinigameRequest, x_guest_token: str = He
             buff_type="elemental_boost",
             duration_seconds=round(dur, 1),
             time_remaining=round(dur, 1),
-            is_debuff=False
+            is_debuff=False,
+            gold_reward=gold_reward
         )
     elif req.minigame_type == MinigameType.ALCHEMICAL_TRANSMUTATION.value:
-        mult = (2.0 + overdrive_bonus) if req.success else 1.3
-        dur = 20.0 * (1.0 + overdrive_bonus * 0.5)
+        mult = (2.5 + overdrive_bonus) if req.success else 1.5
+        dur = 35.0 * (1.0 + overdrive_bonus * 0.5)
+        if req.success:
+            floor_base_gold = get_floor_gold_reward(player.active_run.current_floor, 1.0)
+            gold_reward = round(floor_base_gold * 4.0, 1)
+            player.active_run.gold += gold_reward
+            player.active_run.total_gold_this_run += gold_reward
         buff = ActiveBuff(
             id=f"buff_{uuid.uuid4().hex[:8]}",
             name="Philosopher's Midas Elixir",
@@ -78,41 +98,53 @@ async def claim_minigame_buff(req: ClaimMinigameRequest, x_guest_token: str = He
             buff_type="gold_multiplier",
             duration_seconds=round(dur, 1),
             time_remaining=round(dur, 1),
-            is_debuff=False
+            is_debuff=False,
+            gold_reward=gold_reward
         )
     else:
         # Endless Risk/Reward Minigames
         diff = req.difficulty.lower()
         if diff == "abyssal":
-            d_mult = 3.0
-            max_buff = 1.60
-            max_debuff = 0.60
+            d_mult = 4.0
+            max_buff = 3.50  # Up to +350% (4.5x multiplier!)
+            max_debuff = 0.55
+            base_bounty_mult = 12.0
         elif diff == "adept":
-            d_mult = 1.8
-            max_buff = 0.75
+            d_mult = 2.4
+            max_buff = 1.80  # Up to +180% (2.8x multiplier!)
             max_debuff = 0.35
+            base_bounty_mult = 6.0
         else:  # novice
-            d_mult = 1.0
-            max_buff = 0.35
+            d_mult = 1.4
+            max_buff = 0.75  # Up to +75% (1.75x multiplier!)
             max_debuff = 0.15
+            base_bounty_mult = 3.0
 
         score = req.score
         is_debuff = score < 0
 
         if score >= 0:
-            bonus = min(max_buff, (score / 180.0) * 0.20 * d_mult)
-            bonus *= (1.0 + overdrive_bonus * 0.25)
+            score_ratio = min(1.0, score / 120.0)
+            bonus = max_buff * score_ratio
+            bonus *= (1.0 + overdrive_bonus * 0.30)
             final_mult = 1.0 + bonus
+
+            # Award instant Astral Gold Bounty based on floor and performance
+            floor_base_gold = get_floor_gold_reward(player.active_run.current_floor, 1.0)
+            gold_reward = round(floor_base_gold * (base_bounty_mult + score_ratio * base_bounty_mult), 1)
+            player.active_run.gold += gold_reward
+            player.active_run.total_gold_this_run += gold_reward
         else:
-            penalty = min(max_debuff, (abs(score) / 180.0) * 0.15 * d_mult)
-            final_mult = max(0.40, 1.0 - penalty)
+            penalty = min(max_debuff, (abs(score) / 120.0) * max_debuff)
+            final_mult = max(0.35, 1.0 - penalty)
+            gold_reward = 0.0
 
         final_mult = round(final_mult, 2)
         target_stat = req.target_stat if req.target_stat in STAT_LABELS else "all_damage"
         stat_name = STAT_LABELS.get(target_stat, "Stat")
         game_name = GAME_TITLES.get(req.minigame_type, req.minigame_type.replace("_", " ").title())
 
-        dur = max(30.0, req.duration_seconds) * (1.0 + overdrive_bonus * 0.2)
+        dur = max(45.0, req.duration_seconds) * (1.0 + overdrive_bonus * 0.25)
         prefix = "Affliction:" if is_debuff else "Catalyst:"
         buff_name = f"{prefix} {game_name} ({stat_name})"
 
@@ -123,11 +155,17 @@ async def claim_minigame_buff(req: ClaimMinigameRequest, x_guest_token: str = He
             buff_type=target_stat,
             duration_seconds=round(dur, 1),
             time_remaining=round(dur, 1),
-            is_debuff=is_debuff
+            is_debuff=is_debuff,
+            gold_reward=gold_reward
         )
         
+    if gold_reward > 0:
+        await db_manager.save_player(player.model_dump())
+
     return {
         "status": "buff_awarded",
-        "buff": buff
+        "buff": buff,
+        "gold_reward": gold_reward,
+        "player_gold": player.active_run.gold
     }
 

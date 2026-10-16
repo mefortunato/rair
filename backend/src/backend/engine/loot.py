@@ -65,9 +65,9 @@ def generate_gear_item(floor: int, guaranteed_slot: GearSlot | None = None, luck
     base_atk = 0.0
     base_def = 0.0
     if slot in (GearSlot.WEAPON, GearSlot.CATALYST):
-        base_atk = round(8.0 * (1.10 ** max(0, floor - 1)), 1)
+        base_atk = round(6.0 * (1.08 ** max(0, floor - 1)), 1)
     else:
-        base_def = round(4.0 * (1.06 ** max(0, floor - 1)), 1)
+        base_def = round(3.5 * (1.06 ** max(0, floor - 1)), 1)
         
     # Generate affixes
     num_affixes = RARITY_AFFIX_COUNT[rarity]

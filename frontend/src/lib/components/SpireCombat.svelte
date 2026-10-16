@@ -34,7 +34,11 @@
 		{#if run?.is_boss_floor}
 			<div class="boss-tag">
 				<span class="boss-icon">⚠️</span>
-				<span>BOSS ENCOUNTER • REWARD: SPIRE BOON</span>
+				<span>BOSS ENCOUNTER</span>
+			</div>
+			<div class="boss-enrage-badge {game.bossTimer <= 8 ? 'critical' : ''}">
+				<span class="timer-icon">⏳</span>
+				<span class="font-mono">ENRAGE: {game.bossTimer.toFixed(1)}s</span>
 			</div>
 		{/if}
 
@@ -100,18 +104,38 @@
 		</div>
 	</div>
 
+	<!-- Boss Enrage Timer Bar -->
+	{#if run?.is_boss_floor}
+		{@const maxTime = 30 + (run.perks?.find((p) => p.id === 'astral_bulwark')?.rank || 0) * 10}
+		{@const timerPct = Math.max(0, Math.min(100, (game.bossTimer / maxTime) * 100))}
+		<div class="enrage-section {game.bossTimer <= 8 ? 'critical' : ''}">
+			<div class="enrage-meta">
+				<span class="enrage-label">⚠️ SOVEREIGN ENRAGE COUNTDOWN</span>
+				<span class="enrage-val font-mono">{game.bossTimer.toFixed(1)}s</span>
+			</div>
+			<div class="enrage-track">
+				<div class="enrage-fill" style="width: {timerPct}%;"></div>
+			</div>
+		</div>
+	{/if}
+
 	<!-- Active Buffs Tracker -->
 	{#if run && run.active_buffs.length > 0}
 		<div class="active-buffs-bar">
-			{#each run.active_buffs as buff (buff.id)}
-				{@const isDebuff = buff.is_debuff || buff.multiplier < 1.0}
-				<div class="buff-chip {isDebuff ? 'debuff' : 'buff'}">
-					<span class="buff-icon">{isDebuff ? '⚠️' : '✨'}</span>
-					<span class="buff-name">{buff.name}</span>
-					<span class="buff-mult font-mono">x{buff.multiplier}</span>
-					<span class="buff-time font-mono">({Math.ceil(buff.time_remaining)}s)</span>
-				</div>
-			{/each}
+			<div class="buffs-header-row">
+				<span class="buffs-accent-label">⚡ OVERDRIVE RESONANCE ACTIVE</span>
+			</div>
+			<div class="buffs-chips-row">
+				{#each run.active_buffs as buff (buff.id)}
+					{@const isDebuff = buff.is_debuff || buff.multiplier < 1.0}
+					<div class="buff-chip {isDebuff ? 'debuff' : 'buff'}">
+						<span class="buff-icon">{isDebuff ? '⚠️' : '✨'}</span>
+						<span class="buff-name">{buff.name}</span>
+						<span class="buff-mult font-mono">{buff.multiplier >= 1.0 ? '+' : ''}{Math.round((buff.multiplier - 1) * 100)}%</span>
+						<span class="buff-time font-mono">({Math.ceil(buff.time_remaining)}s)</span>
+					</div>
+				{/each}
+			</div>
 		</div>
 	{/if}
 </div>
@@ -170,6 +194,32 @@
 		align-items: center;
 		gap: 0.4rem;
 		animation: pulseGlow 1.5s infinite;
+	}
+
+	.boss-enrage-badge {
+		background: rgba(245, 158, 11, 0.18);
+		border: 1px solid #f59e0b;
+		color: #fbbf24;
+		padding: 0.25rem 0.75rem;
+		border-radius: 9999px;
+		font-size: 0.75rem;
+		font-weight: 800;
+		display: flex;
+		align-items: center;
+		gap: 0.35rem;
+	}
+
+	.boss-enrage-badge.critical {
+		background: rgba(239, 68, 68, 0.35);
+		border-color: #ef4444;
+		color: #ffffff;
+		animation: criticalPulse 0.6s infinite alternate;
+		box-shadow: 0 0 14px rgba(239, 68, 68, 0.6);
+	}
+
+	@keyframes criticalPulse {
+		from { transform: scale(1); filter: brightness(1); }
+		to { transform: scale(1.06); filter: brightness(1.3); }
 	}
 
 	.claim-boon-btn {
@@ -323,12 +373,94 @@
 		font-weight: 600;
 	}
 
+	/* Boss Enrage Section */
+	.enrage-section {
+		display: flex;
+		flex-direction: column;
+		gap: 0.35rem;
+		background: rgba(15, 23, 42, 0.7);
+		border: 1px solid rgba(245, 158, 11, 0.3);
+		border-radius: 8px;
+		padding: 0.5rem 0.75rem;
+		transition: all 0.2s ease;
+	}
+
+	.enrage-section.critical {
+		border-color: #ef4444;
+		background: rgba(239, 68, 68, 0.12);
+		box-shadow: 0 0 12px rgba(239, 68, 68, 0.3);
+	}
+
+	.enrage-meta {
+		display: flex;
+		justify-content: space-between;
+		font-size: 0.75rem;
+	}
+
+	.enrage-label {
+		color: #f59e0b;
+		font-weight: 700;
+		letter-spacing: 0.05em;
+	}
+
+	.enrage-section.critical .enrage-label {
+		color: #ef4444;
+	}
+
+	.enrage-val {
+		color: #fbbf24;
+		font-weight: 800;
+	}
+
+	.enrage-section.critical .enrage-val {
+		color: #ffffff;
+	}
+
+	.enrage-track {
+		width: 100%;
+		height: 8px;
+		background: rgba(0, 0, 0, 0.4);
+		border-radius: 999px;
+		overflow: hidden;
+		border: 1px solid rgba(255, 255, 255, 0.08);
+	}
+
+	.enrage-fill {
+		height: 100%;
+		background: linear-gradient(90deg, #f59e0b 0%, #ef4444 100%);
+		border-radius: 999px;
+		transition: width 0.1s linear;
+	}
+
+	.enrage-section.critical .enrage-fill {
+		background: linear-gradient(90deg, #ef4444 0%, #b91c1c 100%);
+	}
+
 	.active-buffs-bar {
+		display: flex;
+		flex-direction: column;
+		gap: 0.4rem;
+		padding-top: 0.6rem;
+		border-top: 1px solid var(--border-subtle);
+	}
+
+	.buffs-header-row {
+		display: flex;
+		align-items: center;
+	}
+
+	.buffs-accent-label {
+		font-size: 0.65rem;
+		letter-spacing: 0.12em;
+		font-weight: 800;
+		color: #a855f7;
+		text-shadow: 0 0 8px rgba(168, 85, 247, 0.5);
+	}
+
+	.buffs-chips-row {
 		display: flex;
 		flex-wrap: wrap;
 		gap: 0.5rem;
-		padding-top: 0.5rem;
-		border-top: 1px solid var(--border-subtle);
 	}
 
 	.buff-chip {

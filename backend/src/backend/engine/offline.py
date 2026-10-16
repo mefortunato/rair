@@ -1,7 +1,7 @@
 import math
 from datetime import datetime, timezone
 from backend.models.player import Player
-from backend.engine.scaling import get_guardian_max_hp, get_floor_gold_reward
+from backend.engine.scaling import get_guardian_max_hp, get_floor_gold_reward, get_guardian_defense
 from backend.engine.loot import generate_gear_item
 
 def calculate_offline_gains(player: Player, now: datetime | None = None) -> dict:
@@ -65,14 +65,20 @@ def calculate_offline_gains(player: Player, now: datetime | None = None) -> dict
     # Simulate step by step with max 500 floors
     while time_remaining > 0 and (simulated_floor - current_floor) < 500:
         guardian_hp = get_guardian_max_hp(simulated_floor)
-        time_to_kill = (guardian_hp / (estimated_dps * offline_efficiency)) + 1.0
+        guardian_def = get_guardian_defense(simulated_floor)
+        effective_atk = max(1.0, atk - guardian_def)
+        current_dps = max(1.0, effective_atk * attack_speed * effective_crit_factor)
+        time_to_kill = (guardian_hp / (current_dps * offline_efficiency)) + 1.0
         
         # If boss floor (every 5 floors) takes longer than 30s, player hits a wall and farms current floor
         if simulated_floor % 5 == 0 and time_to_kill > 30.0:
             # Wall hit: farm current non-boss floor with remaining time
             farm_floor = max(1, simulated_floor - 1)
             farm_hp = get_guardian_max_hp(farm_floor)
-            farm_ttk = (farm_hp / (estimated_dps * offline_efficiency)) + 1.0
+            farm_def = get_guardian_defense(farm_floor)
+            farm_atk = max(1.0, atk - farm_def)
+            farm_dps = max(1.0, farm_atk * attack_speed * effective_crit_factor)
+            farm_ttk = (farm_hp / (farm_dps * offline_efficiency)) + 1.0
             clears = int(time_remaining / farm_ttk)
             gold_accumulated += clears * get_floor_gold_reward(farm_floor, player.stats.gold_multiplier)
             break

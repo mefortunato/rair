@@ -27,6 +27,7 @@ class ActiveBuff(BaseModel):
     duration_seconds: float
     time_remaining: float
     is_debuff: bool = False
+    gold_reward: Optional[float] = None
 
 class ClaimMinigameRequest(BaseModel):
     minigame_type: str

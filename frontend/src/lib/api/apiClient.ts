@@ -138,7 +138,11 @@ export class ApiClient {
 			throw new Error('Claim buff failed');
 		}
 		const data = await res.json();
-		return data.buff;
+		const buff: ActiveBuff = data.buff;
+		if (data.gold_reward !== undefined) {
+			buff.gold_reward = data.gold_reward;
+		}
+		return buff;
 	}
 
 	public async salvageItem(itemId: string): Promise<any> {

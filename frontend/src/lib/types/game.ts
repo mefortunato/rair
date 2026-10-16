@@ -48,6 +48,7 @@ export interface ActiveBuff {
 	duration_seconds: number;
 	time_remaining: number;
 	is_debuff?: boolean;
+	gold_reward?: number;
 }
 
 export interface ActiveUpgrades {

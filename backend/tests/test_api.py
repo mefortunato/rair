@@ -86,9 +86,12 @@ async def test_minigame_claim():
             }
         )
         assert runner_resp.status_code == 200
-        runner_buff = runner_resp.json()["buff"]
+        runner_data = runner_resp.json()
+        assert "gold_reward" in runner_data
+        assert runner_data["gold_reward"] > 0
+        runner_buff = runner_data["buff"]
         assert runner_buff["buff_type"] == "attack_speed"
-        assert runner_buff["multiplier"] > 1.0
+        assert runner_buff["multiplier"] >= 2.0
         assert runner_buff["is_debuff"] is False
         assert "Abyssal Runner" in runner_buff["name"]
 
@@ -105,6 +108,7 @@ async def test_minigame_claim():
             }
         )
         assert gambit_resp.status_code == 200
+        assert gambit_resp.json()["gold_reward"] == 0
         gambit_buff = gambit_resp.json()["buff"]
         assert gambit_buff["buff_type"] == "crit_multiplier"
         assert gambit_buff["multiplier"] < 1.0

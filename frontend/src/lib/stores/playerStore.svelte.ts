@@ -120,11 +120,11 @@ class GameStore {
 
 		// Run upgrades
 		if (this.player.active_run.upgrades) {
-			baseAtk += (this.player.active_run.upgrades.weapon_sharpening || 0) * 5;
-			attackSpeed += (this.player.active_run.upgrades.swift_strike || 0) * 0.15;
-			critChance += (this.player.active_run.upgrades.focus_training || 0) * 0.02;
-			critMultiplier += (this.player.active_run.upgrades.deadly_precision || 0) * 0.15;
-			goldMult *= 1 + (this.player.active_run.upgrades.midas_greed || 0) * 0.15;
+			baseAtk += (this.player.active_run.upgrades.weapon_sharpening || 0) * 2;
+			attackSpeed += (this.player.active_run.upgrades.swift_strike || 0) * 0.06;
+			critChance += (this.player.active_run.upgrades.focus_training || 0) * 0.012;
+			critMultiplier += (this.player.active_run.upgrades.deadly_precision || 0) * 0.08;
+			goldMult *= 1 + (this.player.active_run.upgrades.midas_greed || 0) * 0.08;
 		}
 
 		// Roguelike Run Perks
@@ -215,6 +215,17 @@ class GameStore {
 	private updateCombat(dt: number) {
 		if (!this.player) return;
 
+		const run = this.player.active_run;
+
+		// Boss Enrage countdown check
+		if (run.is_boss_floor) {
+			this.bossTimer = Math.max(0, this.bossTimer - dt);
+			if (this.bossTimer <= 0) {
+				this.onBossEnrageFailed();
+				return;
+			}
+		}
+
 		const stats = this.getEffectiveStats();
 		this.attackAccumulator += dt;
 
@@ -224,6 +235,31 @@ class GameStore {
 			this.attackAccumulator -= attackInterval;
 			this.executeHeroAttack(stats);
 		}
+	}
+
+	private onBossEnrageFailed() {
+		if (!this.player) return;
+		const run = this.player.active_run;
+		this.isBossEnraged = true;
+		this.consecutiveHits = 0;
+		sfx.playMinigameMiss();
+		this.addToast(`⚠️ Boss Enraged! Floor ${run.current_floor} Guardian overwhelmed you. Retreating to regroup!`, 'warning');
+
+		// Retreat to previous floor to farm gold and prepare minigame buffs
+		const retreatFloor = Math.max(1, run.current_floor - 1);
+		run.current_floor = retreatFloor;
+		run.is_boss_floor = retreatFloor % 5 === 0;
+		run.guardian_element = this.determineFloorElement(retreatFloor);
+
+		const baseHp = 250.0 * Math.pow(1.20, retreatFloor - 1) * (1 + Math.floor(retreatFloor / 10) * 0.75);
+		const bossMult = retreatFloor % 10 === 0 ? 3.5 : retreatFloor % 5 === 0 ? 2.8 : 1.0;
+		const maxHp = Math.round(baseHp * bossMult);
+		run.guardian_hp_max = maxHp;
+		run.guardian_hp_current = maxHp;
+
+		const bulwark = run.perks?.find((p) => p.id === 'astral_bulwark');
+		this.bossTimer = 30 + (bulwark ? bulwark.rank * 10 : 0);
+		this.isBossEnraged = false;
 	}
 
 	private executeHeroAttack(stats: ReturnType<typeof this.getEffectiveStats>) {
@@ -284,7 +320,11 @@ class GameStore {
 		const isCrit = Math.random() < stats.critChance;
 		const critFactor = isCrit ? stats.critMultiplier : 1.0;
 
-		const rawDmg = stats.totalAtk * elemMult * critFactor * perkDmgMult;
+		// Guardian Defense calculation
+		const guardianDef = Math.floor(2.5 * Math.pow(1.09, Math.max(0, run.current_floor - 1)));
+		const effectiveAtk = Math.max(1, stats.totalAtk - guardianDef);
+
+		const rawDmg = effectiveAtk * elemMult * critFactor * perkDmgMult;
 		let finalDmg = Math.max(1, Math.round(rawDmg));
 
 		// Abyssal Cull execute on crits for non-bosses
@@ -343,7 +383,7 @@ class GameStore {
 		this.consecutiveHits = 0;
 
 		// Calculate gold
-		const baseGold = 20.0 * Math.pow(1.12, floor - 1);
+		const baseGold = 15.0 * Math.pow(1.10, floor - 1);
 		const goldEarned = Math.round(baseGold * stats.goldMult);
 
 		run.gold += goldEarned;
@@ -382,8 +422,8 @@ class GameStore {
 		run.guardian_element = this.determineFloorElement(nextFloor);
 		run.is_boss_floor = nextFloor % 5 === 0;
 
-		const baseHp = 120.0 * Math.pow(1.14, nextFloor - 1) * (1 + Math.floor(nextFloor / 10) * 0.6);
-		const bossMult = nextFloor % 10 === 0 ? 3.5 : nextFloor % 5 === 0 ? 2.5 : 1.0;
+		const baseHp = 250.0 * Math.pow(1.20, nextFloor - 1) * (1 + Math.floor(nextFloor / 10) * 0.75);
+		const bossMult = nextFloor % 10 === 0 ? 3.5 : nextFloor % 5 === 0 ? 2.8 : 1.0;
 		const maxHp = Math.round(baseHp * bossMult);
 
 		run.guardian_hp_max = maxHp;
@@ -392,12 +432,13 @@ class GameStore {
 		// Reset boss timer with Astral Bulwark bonus
 		const bulwark = run.perks?.find((p) => p.id === 'astral_bulwark');
 		this.bossTimer = 30 + (bulwark ? bulwark.rank * 10 : 0);
+		this.isBossEnraged = false;
 
 		// Loot roll with Spire Scavenger bonus (guaranteed on boss floors)
 		const scavenger = run.perks?.find((p) => p.id === 'spire_scavenger');
 		const scavBonus = scavenger ? scavenger.rank * 0.15 : 0;
 		const lootRoll = Math.random();
-		if (run.is_boss_floor || lootRoll < (0.15 + scavBonus)) {
+		if (run.is_boss_floor || lootRoll < (0.06 + scavBonus)) {
 			this.generateAndAddLoot(nextFloor);
 		}
 
@@ -448,8 +489,8 @@ class GameStore {
 
 		const name = `${prefixes[element][Math.floor(Math.random() * prefixes[element].length)]} ${slotNames[slot]}`;
 		const isWeaponOrCatalyst = slot === 'weapon' || slot === 'catalyst';
-		const baseAtk = isWeaponOrCatalyst ? Math.round(10 * Math.pow(1.1, floor - 1)) : 0;
-		const baseDef = !isWeaponOrCatalyst ? Math.round(5 * Math.pow(1.06, floor - 1)) : 0;
+		const baseAtk = isWeaponOrCatalyst ? Math.round(6 * Math.pow(1.08, floor - 1)) : 0;
+		const baseDef = !isWeaponOrCatalyst ? Math.round(3.5 * Math.pow(1.06, floor - 1)) : 0;
 
 		const affixes = [
 			{
@@ -503,23 +544,23 @@ class GameStore {
 		if (!this.player) return 0;
 		const currentLevel = this.player.active_run.upgrades[upgradeKey] || 0;
 		const baseCosts: Record<keyof ActiveUpgrades, number> = {
-			weapon_sharpening: 15,
-			swift_strike: 25,
-			focus_training: 35,
-			deadly_precision: 50,
-			elemental_infusion: 40,
-			midas_greed: 30
+			weapon_sharpening: 25,
+			swift_strike: 35,
+			focus_training: 45,
+			deadly_precision: 60,
+			elemental_infusion: 50,
+			midas_greed: 40
 		};
 		const multipliers: Record<keyof ActiveUpgrades, number> = {
-			weapon_sharpening: 1.25,
-			swift_strike: 1.35,
+			weapon_sharpening: 1.30,
+			swift_strike: 1.38,
 			focus_training: 1.45,
-			deadly_precision: 1.5,
-			elemental_infusion: 1.3,
-			midas_greed: 1.4
+			deadly_precision: 1.50,
+			elemental_infusion: 1.35,
+			midas_greed: 1.40
 		};
-		const base = baseCosts[upgradeKey] || 20;
-		const mult = multipliers[upgradeKey] || 1.3;
+		const base = baseCosts[upgradeKey] || 25;
+		const mult = multipliers[upgradeKey] || 1.35;
 		return Math.round(base * Math.pow(mult, currentLevel));
 	}
 
@@ -715,6 +756,13 @@ class GameStore {
 				buff.multiplier *= 1 + catalyst.rank * 0.30;
 			}
 		}
+		if (buff.gold_reward && buff.gold_reward > 0) {
+			this.player.active_run.gold += buff.gold_reward;
+			this.player.active_run.total_gold_this_run += buff.gold_reward;
+			sfx.playGold();
+			this.addToast(`🪙 Astral Bounty: +${Math.round(buff.gold_reward).toLocaleString()} Gold!`, 'loot');
+		}
+
 		this.player.active_run.active_buffs.push(buff);
 		if (isDebuff) {
 			sfx.playMinigameMiss();

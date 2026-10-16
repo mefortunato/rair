@@ -26,7 +26,7 @@ def create_starter_player(guest_token: str, handle: str = "Ascendant Rogue") -> 
         rarity=Rarity.COMMON,
         element=ElementType.FIRE,
         level=1,
-        base_atk=12.0,
+        base_atk=8.0,
         base_def=0.0,
         affixes=[Affix(stat="fire_dmg", value=0.10, description="+10% Inferno Mastery")],
         salvage_value=10,

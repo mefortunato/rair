@@ -19,7 +19,7 @@ def test_floor_scaling():
     hp_5 = get_guardian_max_hp(5)  # Boss floor
     hp_10 = get_guardian_max_hp(10) # Void Boss floor
     
-    assert hp_1 == 120.0
+    assert hp_1 == 250.0
     assert hp_2 > hp_1
     assert hp_5 > hp_2 * 2.0  # Boss multiplier active
     assert hp_10 > hp_5
