@@ -92,6 +92,14 @@
 		position: relative;
 	}
 
+	@media (max-width: 640px) {
+		.app-layout {
+			padding-left: max(0.5rem, env(safe-area-inset-left));
+			padding-right: max(0.5rem, env(safe-area-inset-right));
+			gap: 0.6rem;
+		}
+	}
+
 	.pwa-update-banner {
 		display: flex;
 		align-items: center;

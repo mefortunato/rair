@@ -10,6 +10,7 @@
 	const navItems: {
 		id: ActiveView;
 		label: string;
+		shortLabel: string;
 		subtitle: string;
 		icon: string;
 		badge?: number;
@@ -18,18 +19,21 @@
 		{
 			id: 'spire',
 			label: 'Ascension Spire',
+			shortLabel: 'Spire',
 			subtitle: 'Idle Combat & Climb',
 			icon: '🗼'
 		},
 		{
 			id: 'equipment',
 			label: 'Equipment & Forge',
+			shortLabel: 'Forge',
 			subtitle: 'Avatar Gear & Bag',
 			icon: '🛡️'
 		},
 		{
 			id: 'boons',
 			label: 'Spire Boons',
+			shortLabel: 'Boons',
 			subtitle: 'Roguelike Perks',
 			icon: '👑',
 			badge: pendingBoons,
@@ -38,6 +42,7 @@
 		{
 			id: 'minigames',
 			label: 'Nexus Gambit',
+			shortLabel: 'Gambit',
 			subtitle: '10 Endless Trials',
 			icon: '⚡',
 			badge: minigameLive ? 1 : 0,
@@ -65,7 +70,10 @@
 				</div>
 
 				<div class="tab-labels">
-					<span class="tab-title">{item.label}</span>
+					<span class="tab-title">
+						<span class="title-full">{item.label}</span>
+						<span class="title-short">{item.shortLabel}</span>
+					</span>
 					<span class="tab-subtitle">{item.subtitle}</span>
 				</div>
 
@@ -159,6 +167,10 @@
 		letter-spacing: 0.03em;
 	}
 
+	.title-short {
+		display: none;
+	}
+
 	.tab-subtitle {
 		font-size: 0.65rem;
 		color: var(--text-muted);
@@ -168,6 +180,52 @@
 	@media (min-width: 768px) {
 		.tab-subtitle {
 			display: inline;
+		}
+	}
+
+	@media (max-width: 768px) {
+		.bottom-nav-dock {
+			padding: 0.3rem;
+			bottom: max(0.35rem, env(safe-area-inset-bottom));
+			border-radius: 12px;
+		}
+
+		.dock-container {
+			gap: 0.25rem;
+		}
+
+		.nav-tab {
+			flex-direction: column;
+			gap: 0.15rem;
+			padding: 0.35rem 0.15rem;
+			min-height: 50px;
+		}
+
+		.tab-icon {
+			font-size: 1.35rem;
+		}
+
+		.tab-labels {
+			align-items: center;
+			text-align: center;
+		}
+
+		.title-full {
+			display: none;
+		}
+
+		.title-short {
+			display: inline;
+			font-size: 0.72rem;
+			font-weight: 800;
+		}
+
+		.active-indicator {
+			top: auto;
+			bottom: -1px;
+			left: 15%;
+			right: 15%;
+			height: 2px;
 		}
 	}
 

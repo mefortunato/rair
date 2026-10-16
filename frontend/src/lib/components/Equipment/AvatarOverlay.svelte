@@ -358,4 +358,44 @@
 	.rarity-legendary {
 		color: #fbbf24;
 	}
+
+	@media (max-width: 640px) {
+		.avatar-overlay-stage {
+			height: clamp(330px, 46vh, 420px);
+			border-radius: 12px;
+		}
+
+		.avatar-hero-header {
+			top: 0.65rem;
+			left: 0.75rem;
+		}
+
+		.hero-name {
+			font-size: 1.05rem;
+		}
+
+		.gear-socket {
+			width: 44px;
+			height: 44px;
+			padding: 0;
+			justify-content: center;
+			border-radius: 10px;
+			max-width: 44px;
+		}
+
+		.socket-details {
+			display: none;
+		}
+
+		.socket-circle {
+			width: 100%;
+			height: 100%;
+			border: none;
+			background: transparent;
+		}
+
+		.socket-icon {
+			font-size: 1.35rem;
+		}
+	}
 </style>

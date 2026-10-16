@@ -12,6 +12,7 @@
 	let selectedSlot = $state<GearSlot | null>('weapon');
 	let selectedBagItem = $state<GearItem | null>(null);
 	let activeFilter = $state<GearSlot | 'all'>('all');
+	let mobileTab = $state<'avatar' | 'bag'>('avatar');
 
 	// If slot selected on avatar, look up equipped item or default to first matching bag item
 	let equippedItemInSlot = $derived(
@@ -62,8 +63,24 @@
 </script>
 
 <div class="equipment-view-container">
+	<!-- Mobile Subnav Switcher (< 800px) -->
+	<div class="mobile-subnav">
+		<button
+			class="subnav-btn {mobileTab === 'avatar' ? 'active' : ''}"
+			onclick={() => (mobileTab = 'avatar')}
+		>
+			<span>👤 Avatar & Sockets</span>
+		</button>
+		<button
+			class="subnav-btn {mobileTab === 'bag' ? 'active' : ''}"
+			onclick={() => (mobileTab = 'bag')}
+		>
+			<span>🎒 Inventory Bag ({inventory.length})</span>
+		</button>
+	</div>
+
 	<!-- Left: Bag Inventory -->
-	<div class="glass-panel inventory-panel">
+	<div class="glass-panel inventory-panel {mobileTab === 'bag' ? 'mobile-visible' : 'mobile-hidden'}">
 		<div class="panel-header">
 			<div class="header-titles">
 				<span class="category-tag">EQUIPMENT BAG</span>
@@ -142,7 +159,7 @@
 	</div>
 
 	<!-- Center: Avatar Overlay -->
-	<div class="avatar-center-column">
+	<div class="avatar-center-column {mobileTab === 'avatar' ? 'mobile-visible' : 'mobile-hidden'}">
 		<AvatarOverlay
 			bind:selectedSlot
 			onSelectSlot={selectSlotFromAvatar}
@@ -266,6 +283,10 @@
 		align-items: start;
 	}
 
+	.mobile-subnav {
+		display: none;
+	}
+
 	@media (max-width: 1200px) {
 		.equipment-view-container {
 			grid-template-columns: 1fr 1fr;
@@ -280,9 +301,53 @@
 	@media (max-width: 800px) {
 		.equipment-view-container {
 			grid-template-columns: 1fr;
+			gap: 0.85rem;
 		}
 		.avatar-center-column {
 			grid-column: span 1;
+		}
+
+		.mobile-subnav {
+			display: flex;
+			gap: 0.5rem;
+			width: 100%;
+		}
+
+		.subnav-btn {
+			flex: 1;
+			padding: 0.65rem 0.75rem;
+			background: rgba(15, 23, 42, 0.75);
+			border: 1px solid var(--border-medium);
+			border-radius: 10px;
+			color: var(--text-secondary);
+			font-family: var(--font-title);
+			font-weight: 700;
+			font-size: 0.85rem;
+			cursor: pointer;
+			transition: all 0.2s ease;
+		}
+
+		.subnav-btn.active {
+			background: rgba(0, 210, 255, 0.15);
+			border-color: #00d2ff;
+			color: #ffffff;
+			box-shadow: 0 0 12px rgba(0, 210, 255, 0.3);
+		}
+
+		.mobile-hidden {
+			display: none !important;
+		}
+
+		.mobile-visible {
+			display: flex !important;
+		}
+
+		.inventory-panel {
+			max-height: 480px;
+		}
+
+		.bag-grid {
+			grid-template-columns: repeat(auto-fill, minmax(58px, 1fr));
 		}
 	}
 

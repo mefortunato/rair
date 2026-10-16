@@ -326,7 +326,7 @@
 
 	.perks-grid {
 		display: grid;
-		grid-template-columns: repeat(auto-fit, minmax(360px, 1fr));
+		grid-template-columns: repeat(auto-fit, minmax(min(100%, 340px), 1fr));
 		gap: 1rem;
 	}
 
@@ -485,5 +485,71 @@
 		max-width: 480px;
 		margin: 0;
 		line-height: 1.4;
+	}
+
+	@media (max-width: 640px) {
+		.boons-view-container {
+			gap: 0.85rem;
+		}
+
+		.boons-header-panel {
+			padding: 0.85rem;
+			gap: 0.75rem;
+		}
+
+		.header-right {
+			width: 100%;
+			justify-content: space-between;
+		}
+
+		.category-filters {
+			overflow-x: auto;
+			white-space: nowrap;
+			flex-wrap: nowrap;
+			-webkit-overflow-scrolling: touch;
+			scrollbar-width: none;
+			padding-bottom: 4px;
+		}
+
+		.category-filters::-webkit-scrollbar {
+			display: none;
+		}
+
+		.filter-pill {
+			flex-shrink: 0;
+			padding: 0.35rem 0.65rem;
+			font-size: 0.72rem;
+		}
+
+		.perks-grid {
+			grid-template-columns: 1fr;
+			gap: 0.75rem;
+		}
+
+		.perk-card {
+			padding: 0.85rem;
+			gap: 0.75rem;
+		}
+
+		.perk-icon-wrapper {
+			width: 40px;
+			height: 40px;
+		}
+
+		.perk-icon {
+			font-size: 1.4rem;
+		}
+
+		.perk-name {
+			font-size: 0.88rem;
+		}
+
+		.perk-description {
+			font-size: 0.75rem;
+		}
+
+		.forge-btn {
+			padding: 0.4rem 0.65rem;
+		}
 	}
 </style>

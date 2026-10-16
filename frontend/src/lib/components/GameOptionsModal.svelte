@@ -888,4 +888,37 @@
 		justify-content: flex-end;
 		background: rgba(255, 255, 255, 0.02);
 	}
+
+	@media (max-width: 640px) {
+		.modal-overlay {
+			padding: 0.5rem;
+		}
+
+		.modal-card {
+			border-radius: 14px;
+			max-height: 94dvh;
+		}
+
+		.modal-header {
+			padding: 1rem;
+		}
+
+		.modal-body {
+			padding: 1rem;
+			gap: 1rem;
+		}
+
+		.account-card, .danger-card, .pwa-settings-card {
+			padding: 0.85rem;
+		}
+
+		.confirm-btn-row {
+			flex-direction: column;
+		}
+
+		.btn-danger-confirm, .btn-cancel {
+			width: 100%;
+			text-align: center;
+		}
+	}
 </style>

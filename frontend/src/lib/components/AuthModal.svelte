@@ -806,4 +806,28 @@
 		justify-content: flex-end;
 		background: rgba(255, 255, 255, 0.02);
 	}
+
+	@media (max-width: 640px) {
+		.modal-overlay {
+			padding: 0.5rem;
+		}
+
+		.modal-card {
+			border-radius: 14px;
+			max-height: 94dvh;
+		}
+
+		.modal-header {
+			padding: 1rem;
+		}
+
+		.modal-body {
+			padding: 1rem;
+			gap: 1rem;
+		}
+
+		.btn-overwrite, .btn-load-cloud {
+			width: 100%;
+		}
+	}
 </style>

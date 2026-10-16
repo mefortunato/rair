@@ -276,4 +276,38 @@
 		color: #34d399;
 		letter-spacing: 0.1em;
 	}
+
+	@media (max-width: 640px) {
+		.ascension-modal {
+			padding: 1rem;
+			gap: 1rem;
+		}
+
+		.modal-title {
+			font-size: 1.25rem;
+		}
+
+		.ascension-callout {
+			padding: 0.85rem;
+			gap: 0.75rem;
+		}
+
+		.callout-action {
+			width: 100%;
+		}
+
+		.callout-action .btn-ascend {
+			width: 100%;
+			justify-content: center;
+		}
+
+		.sparks-banner {
+			padding: 0.65rem 1rem;
+		}
+
+		.perks-grid {
+			grid-template-columns: 1fr;
+			gap: 0.65rem;
+		}
+	}
 </style>

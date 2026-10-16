@@ -262,6 +262,34 @@
 	@media (max-width: 820px) {
 		.cards-grid {
 			grid-template-columns: 1fr;
+			gap: 0.85rem;
+		}
+
+		.perk-draft-card {
+			padding: 1rem;
+			gap: 1rem;
+			max-height: 94dvh;
+			overflow-y: auto;
+			-webkit-overflow-scrolling: touch;
+		}
+
+		.draft-title {
+			font-size: 1.25rem;
+		}
+
+		.boss-trophy {
+			font-size: 1.6rem;
+		}
+
+		.icon-orb {
+			width: 56px;
+			height: 56px;
+			font-size: 1.8rem;
+		}
+
+		.perk-card {
+			padding: 1rem;
+			gap: 0.75rem;
 		}
 	}
 

@@ -23,26 +23,107 @@
 	function toggleAudio() {
 		soundEnabled = sfx.toggleSound();
 	}
+
+	function formatVal(val: number): string {
+		if (val >= 1_000_000) return (val / 1_000_000).toFixed(1) + 'M';
+		if (val >= 10_000) return (val / 1_000).toFixed(1) + 'K';
+		return Math.floor(val).toLocaleString();
+	}
 </script>
 
 <header class="resource-summary-bar glass-panel">
-	<!-- Left: Brand & Floor Status -->
-	<div class="summary-left">
-		<button class="brand-btn" onclick={() => nav.setView('spire')}>
-			<h1 class="logo-text">RAIR</h1>
-			<span class="logo-sub">Rogue Ascension</span>
-		</button>
+	<div class="summary-top-row">
+		<!-- Left: Brand & Floor Status -->
+		<div class="summary-left">
+			<button class="brand-btn" onclick={() => nav.setView('spire')}>
+				<h1 class="logo-text">RAIR</h1>
+				<span class="logo-sub">Rogue Ascension</span>
+			</button>
 
-		<div class="floor-badge-container">
-			<div class="floor-badge {isBoss ? 'boss-floor' : ''}">
-				<span class="floor-icon">{isBoss ? '👑' : '⚔️'}</span>
-				<span class="floor-text font-mono">
-					{isBoss ? 'BOSS FLOOR' : 'FLOOR'} {floor}
+			<div class="floor-badge-container">
+				<div class="floor-badge {isBoss ? 'boss-floor' : ''}">
+					<span class="floor-icon">{isBoss ? '👑' : '⚔️'}</span>
+					<span class="floor-text font-mono">
+						<span class="floor-text-full">{isBoss ? 'BOSS FLOOR' : 'FLOOR'}</span>
+						<span class="floor-text-short">{isBoss ? 'B.' : 'F.'}</span> {floor}
+					</span>
+				</div>
+				<span class="record-badge font-mono" title="Highest Floor Conquered">
+					🏆 {highestFloor}
 				</span>
 			</div>
-			<span class="record-badge font-mono" title="Highest Floor Conquered">
-				🏆 {highestFloor}
-			</span>
+		</div>
+
+		<!-- Right: Active Buffs & Utilities -->
+		<div class="summary-right">
+			<!-- Active Buffs / Debuffs Pill -->
+			{#if activeBuffs.length > 0}
+				{@const hasDebuff = activeBuffs.some((b) => b.is_debuff || b.multiplier < 1.0)}
+				<div
+					class="buffs-summary-pill {hasDebuff ? 'has-debuff' : 'all-buffs'}"
+					title="{activeBuffs.map((b) => `${b.name} (${b.multiplier}x, ${Math.ceil(b.time_remaining)}s)`).join(' | ')}"
+				>
+					<span>{hasDebuff ? '⚠️' : '⚡'}</span>
+					<span class="font-mono">{activeBuffs.length} Effect{activeBuffs.length > 1 ? 's' : ''}</span>
+				</div>
+			{/if}
+
+			<!-- Ascension Ready Button (Floor >= 15) -->
+			{#if floor >= 15}
+				<button
+					class="btn btn-primary ascend-quick-btn"
+					onclick={() => (game.activeModal = 'ascension')}
+					title="Reach Spire Transcendence"
+				>
+					<span>⭐ ASCEND</span>
+				</button>
+			{/if}
+
+			<!-- Account Status / Google Link -->
+			{#if isGuest}
+				<button
+					class="account-status-btn guest-btn"
+					onclick={() => game.openAuthModal()}
+					title="Playing as Guest • Click to sign in with Google to save progress!"
+				>
+					<span class="auth-dot guest-dot"></span>
+					<span class="auth-label">Guest</span>
+					<span class="auth-action-chip">Save ☁️</span>
+				</button>
+			{:else}
+				<button
+					class="account-status-btn google-btn"
+					onclick={() => game.openGameOptionsModal()}
+					title="Signed in with Google as {handle} • Cloud saved"
+				>
+					{#if avatar}
+						<img src={avatar} alt="" class="auth-avatar-mini" />
+					{:else}
+						<span class="auth-avatar-fallback">{handle.charAt(0).toUpperCase()}</span>
+					{/if}
+					<span class="auth-label">{handle}</span>
+					<span class="auth-cloud-tag font-mono">CLOUD</span>
+				</button>
+			{/if}
+
+			<!-- Audio Toggle -->
+			<button
+				class="audio-toggle-btn {soundEnabled ? 'sound-on' : 'sound-off'}"
+				onclick={toggleAudio}
+				title="Toggle Sound Effects"
+			>
+				<span>{soundEnabled ? '🔊' : '🔇'}</span>
+			</button>
+
+			<!-- Game Options Gear Button -->
+			<button
+				class="options-toggle-btn"
+				onclick={() => game.openGameOptionsModal()}
+				title="Game Options & Hard Reset"
+				aria-label="Game Options"
+			>
+				<span>⚙️</span>
+			</button>
 		</div>
 	</div>
 
@@ -51,7 +132,7 @@
 		<!-- Active Run Gold -->
 		<div class="resource-item gold-item" title="Active Run Gold (Used for Upgrades & Boon Forging)">
 			<span class="res-icon">🪙</span>
-			<span class="res-val font-mono">{Math.floor(gold).toLocaleString()}</span>
+			<span class="res-val font-mono">{formatVal(gold)}</span>
 			<span class="res-label">GOLD</span>
 		</div>
 
@@ -85,7 +166,7 @@
 			onclick={() => (game.activeModal = 'ascension')}
 		>
 			<span class="res-icon">✨</span>
-			<span class="res-val font-mono">{sparks}</span>
+			<span class="res-val font-mono">{formatVal(sparks)}</span>
 			<span class="res-label">SPARKS</span>
 		</button>
 
@@ -96,80 +177,8 @@
 			onclick={() => nav.setView('equipment')}
 		>
 			<span class="res-icon">💠</span>
-			<span class="res-val font-mono">{aether}</span>
+			<span class="res-val font-mono">{formatVal(aether)}</span>
 			<span class="res-label">AETHER</span>
-		</button>
-	</div>
-
-	<!-- Right: Active Buffs & Utilities -->
-	<div class="summary-right">
-		<!-- Active Buffs / Debuffs Pill -->
-		{#if activeBuffs.length > 0}
-			{@const hasDebuff = activeBuffs.some((b) => b.is_debuff || b.multiplier < 1.0)}
-			<div
-				class="buffs-summary-pill {hasDebuff ? 'has-debuff' : 'all-buffs'}"
-				title="{activeBuffs.map((b) => `${b.name} (${b.multiplier}x, ${Math.ceil(b.time_remaining)}s)`).join(' | ')}"
-			>
-				<span>{hasDebuff ? '⚠️' : '⚡'}</span>
-				<span class="font-mono">{activeBuffs.length} Effect{activeBuffs.length > 1 ? 's' : ''}</span>
-			</div>
-		{/if}
-
-		<!-- Ascension Ready Button (Floor >= 15) -->
-		{#if floor >= 15}
-			<button
-				class="btn btn-primary ascend-quick-btn"
-				onclick={() => (game.activeModal = 'ascension')}
-				title="Reach Spire Transcendence"
-			>
-				<span>⭐ ASCEND</span>
-			</button>
-		{/if}
-
-		<!-- Account Status / Google Link -->
-		{#if isGuest}
-			<button
-				class="account-status-btn guest-btn"
-				onclick={() => game.openAuthModal()}
-				title="Playing as Guest • Click to sign in with Google to save progress!"
-			>
-				<span class="auth-dot guest-dot"></span>
-				<span class="auth-label">Guest</span>
-				<span class="auth-action-chip">Save ☁️</span>
-			</button>
-		{:else}
-			<button
-				class="account-status-btn google-btn"
-				onclick={() => game.openGameOptionsModal()}
-				title="Signed in with Google as {handle} • Cloud saved"
-			>
-				{#if avatar}
-					<img src={avatar} alt="" class="auth-avatar-mini" />
-				{:else}
-					<span class="auth-avatar-fallback">{handle.charAt(0).toUpperCase()}</span>
-				{/if}
-				<span class="auth-label">{handle}</span>
-				<span class="auth-cloud-tag font-mono">CLOUD</span>
-			</button>
-		{/if}
-
-		<!-- Audio Toggle -->
-		<button
-			class="audio-toggle-btn {soundEnabled ? 'sound-on' : 'sound-off'}"
-			onclick={toggleAudio}
-			title="Toggle Sound Effects"
-		>
-			<span>{soundEnabled ? '🔊' : '🔇'}</span>
-		</button>
-
-		<!-- Game Options Gear Button -->
-		<button
-			class="options-toggle-btn"
-			onclick={() => game.openGameOptionsModal()}
-			title="Game Options & Hard Reset"
-			aria-label="Game Options"
-		>
-			<span>⚙️</span>
 		</button>
 	</div>
 </header>
@@ -178,17 +187,91 @@
 	.resource-summary-bar {
 		padding: 0.65rem 1.25rem;
 		display: flex;
-		justify-content: space-between;
-		align-items: center;
-		flex-wrap: wrap;
-		gap: 0.75rem;
-		background: rgba(10, 15, 28, 0.85);
+		flex-direction: column;
+		gap: 0.5rem;
+		background: rgba(10, 15, 28, 0.88);
 		backdrop-filter: blur(16px);
+		-webkit-backdrop-filter: blur(16px);
 		border-bottom: 1px solid rgba(255, 255, 255, 0.1);
 		border-radius: 12px;
 		position: sticky;
 		top: 0.5rem;
 		z-index: 50;
+	}
+
+	.summary-top-row {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		width: 100%;
+		gap: 0.65rem;
+	}
+
+	.floor-text-short {
+		display: none;
+	}
+
+	@media (min-width: 1024px) {
+		.resource-summary-bar {
+			flex-direction: row;
+			justify-content: space-between;
+			align-items: center;
+			gap: 0.75rem;
+		}
+
+		.summary-top-row {
+			display: contents;
+		}
+
+		.summary-center {
+			order: 0;
+		}
+
+		.summary-right {
+			order: 1;
+		}
+	}
+
+	@media (max-width: 640px) {
+		.resource-summary-bar {
+			padding: 0.45rem 0.65rem;
+			gap: 0.35rem;
+			top: max(0.25rem, env(safe-area-inset-top));
+		}
+
+		.floor-text-full {
+			display: none;
+		}
+
+		.floor-text-short {
+			display: inline;
+		}
+
+		.res-label {
+			display: none;
+		}
+
+		.summary-center {
+			overflow-x: auto;
+			white-space: nowrap;
+			-webkit-overflow-scrolling: touch;
+			scrollbar-width: none;
+			padding-bottom: 2px;
+		}
+
+		.summary-center::-webkit-scrollbar {
+			display: none;
+		}
+
+		.resource-item {
+			padding: 0.25rem 0.5rem;
+			font-size: 0.75rem;
+			flex-shrink: 0;
+		}
+
+		.account-status-btn .auth-label {
+			display: none;
+		}
 	}
 
 	.summary-left {

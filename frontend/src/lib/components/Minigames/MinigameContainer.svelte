@@ -1159,4 +1159,73 @@
 			box-shadow: 0 0 25px rgba(255, 210, 0, 0.8);
 		}
 	}
+
+	@media (max-width: 640px) {
+		.minigames-container {
+			padding: 0.75rem;
+			gap: 0.75rem;
+			min-height: 380px;
+		}
+
+		.minigames-header {
+			padding-bottom: 0.5rem;
+			gap: 0.5rem;
+		}
+
+		.minigame-title {
+			font-size: 1.05rem;
+		}
+
+		.draft-cards-grid {
+			grid-template-columns: 1fr;
+			gap: 0.75rem;
+		}
+
+		.draft-card {
+			padding: 1rem;
+		}
+
+		.difficulty-cards-grid {
+			grid-template-columns: 1fr;
+			gap: 0.65rem;
+		}
+
+		.diff-card {
+			padding: 0.85rem;
+		}
+
+		.trial-banner {
+			padding: 0.6rem 0.75rem;
+		}
+
+		.game-hud-bar {
+			padding: 0.5rem 0.75rem;
+			gap: 0.5rem;
+		}
+
+		.hud-title {
+			font-size: 0.95rem;
+		}
+
+		.hud-timer {
+			font-size: 1.15rem;
+		}
+
+		.hud-score-val {
+			font-size: 1.15rem;
+		}
+
+		.result-summary-card {
+			padding: 1rem;
+			gap: 1rem;
+		}
+
+		.award-badge {
+			padding: 0.75rem 1rem;
+		}
+
+		.award-mult {
+			font-size: 1.4rem;
+		}
+	}
 </style>

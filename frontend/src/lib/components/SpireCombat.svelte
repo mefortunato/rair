@@ -505,4 +505,54 @@
 		color: #94a3b8;
 		font-size: 0.7rem;
 	}
+
+	@media (max-width: 640px) {
+		.spire-container {
+			padding: 0.85rem;
+			gap: 0.75rem;
+			min-height: 320px;
+		}
+
+		.floor-number {
+			font-size: 1.3rem;
+		}
+
+		.guardian-stage {
+			min-height: 180px;
+		}
+
+		.guardian-entity {
+			width: 100px;
+			height: 100px;
+			margin-bottom: 0.65rem;
+		}
+
+		.monolith-core {
+			width: 60px;
+			height: 60px;
+			border-radius: 14px;
+		}
+
+		.core-glyph {
+			font-size: 1.6rem;
+		}
+
+		.ring-outer {
+			width: 95px;
+			height: 95px;
+		}
+
+		.ring-inner {
+			width: 75px;
+			height: 75px;
+		}
+
+		.guardian-name {
+			font-size: 1.15rem;
+		}
+
+		.hp-values {
+			font-size: 0.85rem;
+		}
+	}
 </style>

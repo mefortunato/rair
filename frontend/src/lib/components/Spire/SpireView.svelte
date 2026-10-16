@@ -309,4 +309,36 @@
 	.highlight-cyan {
 		color: #00d2ff;
 	}
+
+	@media (max-width: 640px) {
+		.spire-view-container {
+			gap: 0.75rem;
+		}
+
+		.shop-panel {
+			padding: 0.85rem;
+		}
+
+		.stats-panel {
+			padding: 0.85rem;
+		}
+
+		.upgrade-row {
+			padding: 0.5rem;
+			gap: 0.5rem;
+		}
+
+		.up-name {
+			font-size: 0.85rem;
+		}
+
+		.up-desc {
+			font-size: 0.7rem;
+		}
+
+		.buy-btn {
+			padding: 0.45rem 0.65rem;
+			min-width: 75px;
+		}
+	}
 </style>
